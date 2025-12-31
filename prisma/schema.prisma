@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String
+  phoneNumber String?
+  dateOfBirth DateTime?
+  role        Role     @default(USER)
+  appointments Appointment[]
+  orders       Order[]
+  profile      UserProfile?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+model UserProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+
+  emergencyContact  String?
+  emergencyPhone    String?
+
+  medicalHistory    String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Doctor {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+}
+
+
+model Appointment {
+  id        String   @id @default(cuid())
+  userId    String
+  doctorId  String
+  date      DateTime
+  timeSlot  AppointmentTimeSlot
+  type      AppointmentType
+  mode      AppointmentMode
+  status    AppointmentStatus @default(PENDING)
+  notes     String?
+  zoomLink  String? 
+
+  user      User     @relation(fields: [userId], references: [id])
+  doctor    Doctor   @relation(fields: [doctorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AppointmentType {
+  GENERAL_CHECKUP
+  CONSULTATION
+  FOLLOW_UP
+  EMERGENCY
+}
+
+enum AppointmentMode {
+  ONLINE
+  OFFLINE
+}
+
+enum AppointmentTimeSlot {
+  NINE
+  TEN
+  ELEVEN
+  TWO
+  THREE
+  FOUR
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum ProductCategory {
+  MEDICAL_DEVICE
+  SUPPLEMENT
+  PRESCRIPTION
+  MEDICAL_SUPPLY
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  item_name       String
+  description     String
+  unit_price      Int
+  quantity        Int      @default(0)
+  reorder_Level   Int             @default(0) // reorder_level
+  supplier        String?         // supplier
+  category        ProductCategory
+  orderItems OrderItem[]
+  is_active       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+model Order {
+  id        String      @id @default(cuid())
+
+  // Order punya pemilik user (kalau mau allow guest, userId dibuat optional)
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+
+  status    OrderStatus @default(PENDING)
+
+  subtotal  Int
+  shipping  Int
+  tax       Int
+  total     Int
+
+  orderItems OrderItem[]
+  shippingAddress ShippingAddress?
+
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+
+  // relasi ke Order
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // relasi ke Product
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+
+  // snapshot data product saat checkout
+  item_name  String
+  unit_price Int
+  quantity   Int
+
+  createdAt DateTime @default(now())
+}
+
+model ShippingAddress {
+  id        String  @id @default(cuid())
+
+  // 1 order cuma punya 1 alamat kirim
+  orderId   String  @unique
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  full_name String
+  phone     String
+  email     String
+
+  address   String
+  city      String
+  state     String
+  zipCode   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
