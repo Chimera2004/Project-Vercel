@@ -1,8 +1,10 @@
 {
-  "/checkout/page": "app/checkout/page.js",
-  "/store/page": "app/store/page.js",
-  "/api/orders/route": "app/api/orders/route.js",
+  "/page": "app/page.js",
+  "/admin/page": "app/admin/page.js",
   "/booking/page": "app/booking/page.js",
-  "/api/doctors/route": "app/api/doctors/route.js",
-  "/api/appointments/route": "app/api/appointments/route.js"
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/auth/whoami/route": "app/api/auth/whoami/route.js",
+  "/api/admin/dashboard/route": "app/api/admin/dashboard/route.js",
+  "/api/admin/appointments/route": "app/api/admin/appointments/route.js",
+  "/api/admin/appointments/doctors/route": "app/api/admin/appointments/doctors/route.js"
 }

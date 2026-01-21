@@ -4,19 +4,24 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-function getAuthUserId() {
+
+async function getAuthUserId() {
+  const session = await getServerSession(authOptions);
+  if (session?.user?.id) return session.user.id;
+
   const cookieStore = cookies();
   const auth = cookieStore.get("auth")?.value;
   const userId = cookieStore.get("userId")?.value;
-
   if (auth !== "true" || !userId) return null;
   return userId;
 }
 
 export async function POST(req: Request) {
   try {
-    const userId = getAuthUserId();
+    const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
@@ -85,7 +90,7 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const userId = getAuthUserId();
+    const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

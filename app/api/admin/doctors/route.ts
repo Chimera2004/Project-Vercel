@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/server-auth";
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { z } from "zod";
 
 // ================= VALIDATION =================
@@ -21,9 +22,9 @@ const updateDoctorSchema = z.object({
 
 // ================= GET =================
 export async function GET() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -36,9 +37,9 @@ export async function GET() {
 
 // ================= POST =================
 export async function POST(req: Request) {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -58,9 +59,9 @@ export async function POST(req: Request) {
 
 // ================= PUT =================
 export async function PUT(req: Request) {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -83,9 +84,9 @@ export async function PUT(req: Request) {
 
 // ================= DELETE =================
 export async function DELETE(req: Request) {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

@@ -3,9 +3,14 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-function getAuthUserId() {
+async function getAuthUserId() {
+  const session = await getServerSession(authOptions);
+  if (session?.user?.id) return session.user.id;
+
   const store = cookies();
   const auth = store.get("auth")?.value;
   const userId = store.get("userId")?.value;
@@ -13,12 +18,13 @@ function getAuthUserId() {
   return userId;
 }
 
+
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = getAuthUserId();
+    const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
