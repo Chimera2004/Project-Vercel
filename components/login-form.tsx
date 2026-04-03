@@ -138,6 +138,8 @@ export function LoginForm() {
 
       if (role === "ADMIN") {
         router.push("/admin");
+      } else if (role === "DOCTOR") {
+        router.push("/doctor");
       } else {
         router.push("/booking");
       }

@@ -25,6 +25,7 @@ import {
 import { useRouter } from "next/navigation";
 import { stockData } from "@/lib/store-data";
 import { useRef } from "react";
+import Swal from "sweetalert2";
 
 interface Product {
   id: string;
@@ -94,6 +95,10 @@ export default function StorePage() {
       console.log("[v0] New cart state:", newCart);
       return newCart;
     });
+    Swal.fire({
+      toast: true, position: 'top-end', showConfirmButton: false, timer: 1500,
+      icon: 'success', title: 'Ditambahkan ke keranjang'
+    });
   };
 
   const removeFromCart = (productId: string) => {
@@ -140,11 +145,11 @@ export default function StorePage() {
         .filter(Boolean)
         .join(", ");
 
-      alert(
-        `The following items don’t have enough stock and cannot be ordered: ${
-          outOfStockNames || "Unknown items"
-        }`
-      );
+      Swal.fire({
+        icon: 'error',
+        title: 'Stok Tidak Cukup',
+        text: `Barang berikut tidak memiliki stok yang cukup: ${outOfStockNames || "Unknown items"}`
+      });
       return;
     }
 

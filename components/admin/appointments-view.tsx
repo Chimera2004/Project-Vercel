@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Swal from "sweetalert2";
 
 type AppointmentRow = {
   id: string;
@@ -28,6 +29,8 @@ type AppointmentRow = {
   user: { id: string; name: string; email: string };
   doctor: { id: string; name: string };
   notes?: string | null;
+  rescheduleRequested?: boolean;
+  rescheduleNote?: string | null;
 };
 
 type DoctorOption = { id: string; name: string };
@@ -45,9 +48,10 @@ const TIME_SLOTS = [
 function statusLabel(s: string) {
   const map: Record<string, string> = {
     PENDING: "Pending",
-    CONFIRMED: "Confirmed",
+    CONFIRMED: "Confirmed Pending",
     COMPLETED: "Completed",
     CANCELLED: "Cancelled",
+    WAITING_USER_CONFIRMATION: "Waiting User Confirmation",
   };
   return map[s] ?? s;
 }
@@ -68,6 +72,7 @@ export function AppointmentsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mutatingId, setMutatingId] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<"ALL" | "NEED_ACTION">("ALL");
 
   // modal state
   const [open, setOpen] = useState(false);
@@ -77,9 +82,6 @@ export function AppointmentsView() {
   const [doctorId, setDoctorId] = useState<string>("");
   const [dateValue, setDateValue] = useState<string>(""); // YYYY-MM-DD
   const [timeSlot, setTimeSlot] = useState<string>("TEN");
-  const [notes, setNotes] = useState<string>(
-    "Jadwal diubah oleh klinik. Silakan cek detail appointment Anda."
-  );
 
   async function loadAppointments(selectedRange: RangeKey) {
     const res = await fetch(
@@ -126,6 +128,17 @@ export function AppointmentsView() {
   }, [range]);
 
   async function cancelAppointment(id: string) {
+    const result = await Swal.fire({
+      title: 'Batalkan Janji?',
+      text: 'Tindakan ini tidak dapat diurungkan.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Batalkan'
+    });
+    if (!result.isConfirmed) return;
+
     try {
       setMutatingId(id);
       const res = await fetch(`/api/admin/appointments/${id}`, {
@@ -135,8 +148,10 @@ export function AppointmentsView() {
       });
       if (!res.ok) throw new Error("Cancel failed");
       await refresh();
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Janji Dibatalkan' });
     } catch {
       setError("Failed to cancel appointment.");
+      Swal.fire({ icon: 'error', title: 'Gagal', text: "Gagal membatalkan janji temu." });
     } finally {
       setMutatingId(null);
     }
@@ -147,10 +162,6 @@ export function AppointmentsView() {
     setDoctorId(apt.doctor?.id ?? "");
     setDateValue(toDateInputValue(apt.date));
     setTimeSlot(apt.timeSlot ?? "TEN");
-    setNotes(
-      apt.notes ??
-        "Jadwal diubah oleh klinik. Silakan cek detail appointment Anda."
-    );
     setOpen(true);
   }
 
@@ -170,8 +181,7 @@ export function AppointmentsView() {
           action: "RESCHEDULE",
           doctorId,
           date: iso,
-          timeSlot,
-          notes,
+          timeSlot
         }),
       });
 
@@ -181,14 +191,23 @@ export function AppointmentsView() {
       setOpen(false);
       setEditing(null);
       await refresh();
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Jadwal Diubah!' });
     } catch (e: any) {
       setError(e?.message ?? "Failed to reschedule.");
+      Swal.fire({ icon: 'error', title: 'Gagal', text: e?.message ?? "Gagal merubah jadwal." });
     } finally {
       setMutatingId(null);
     }
   }
 
-  const rows = useMemo(() => appointments, [appointments]);
+  const rows = useMemo(() => {
+    if (filterType === "NEED_ACTION") {
+      return appointments.filter(a => a.rescheduleRequested || a.status === "WAITING_USER_CONFIRMATION");
+    }
+    return appointments;
+  }, [appointments, filterType]);
+
+  const needsActionCount = appointments.filter(a => a.rescheduleRequested || a.status === "WAITING_USER_CONFIRMATION").length;
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm">
@@ -227,6 +246,31 @@ export function AppointmentsView() {
         </div>
       </CardHeader>
 
+      <div className="px-6 pb-2">
+        <div className="flex gap-2">
+          <Button
+            variant={filterType === "ALL" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilterType("ALL")}
+          >
+            All Entries
+          </Button>
+          <Button
+            variant={filterType === "NEED_ACTION" ? "destructive" : "outline"}
+            size="sm"
+            onClick={() => setFilterType("NEED_ACTION")}
+            className="relative"
+          >
+            Requested Action
+            {needsActionCount > 0 && (
+              <span className="ml-2 flex items-center justify-center bg-white text-red-600 rounded-full h-5 w-5 text-xs font-bold shadow-sm">
+                {needsActionCount}
+              </span>
+            )}
+          </Button>
+        </div>
+      </div>
+
       <CardContent>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -253,63 +297,79 @@ export function AppointmentsView() {
                 {rows.map((apt) => {
                   const badgeClass =
                     apt.status === "CONFIRMED"
-                      ? "bg-green-100 text-green-800"
+                      ? "bg-gray-100 text-gray-800 border-gray-200 border"
                       : apt.status === "CANCELLED"
-                      ? "bg-gray-100 text-gray-700"
-                      : "bg-yellow-100 text-yellow-800";
+                      ? "bg-red-100 text-red-800 border-red-200 border"
+                      : apt.status === "COMPLETED"
+                      ? "bg-blue-100 text-blue-800 border-blue-200 border"
+                      : apt.status === "WAITING_USER_CONFIRMATION"
+                      ? "bg-orange-100 text-orange-800 border-orange-200 border"
+                      : "bg-gray-100 text-gray-800 border-gray-200 border";
 
                   return (
+                    <Fragment key={apt.id}>
                     <tr
-                      key={apt.id}
-                      className="border-b border-border/50 hover:bg-muted/50"
+                      className={`border-b border-border/50 hover:bg-muted/50 transition-colors ${(apt.rescheduleRequested || apt.status === "WAITING_USER_CONFIRMATION") ? "bg-red-50/30" : ""}`}
                     >
-                      <td className="py-3 px-4">{apt.user?.name ?? "-"}</td>
-                      <td className="py-3 px-4">{apt.doctor?.name ?? "-"}</td>
-                      <td className="py-3 px-4">
-                        {new Date(apt.date).toLocaleDateString()}
+                      <td className="py-4 px-4 align-top">
+                        <div className="font-medium text-foreground">{apt.user?.name ?? "-"}</div>
+                        {apt.rescheduleRequested && (
+                          <div className="mt-1 text-xs text-red-600 font-semibold flex flex-col gap-1">
+                            <span className="flex items-center gap-1">
+                               ⚠️ Permintaan Reschedule Dokter:
+                            </span>
+                            <span className="p-1.5 bg-red-100 rounded-md text-red-800 break-words max-w-[200px]">
+                               {apt.rescheduleNote}
+                            </span>
+                          </div>
+                        )}
+                        {apt.status === "WAITING_USER_CONFIRMATION" && !apt.rescheduleRequested && (
+                          <div className="mt-1 text-xs text-yellow-600 font-semibold flex flex-col gap-1">
+                            <span className="flex items-center gap-1">
+                               ⏳ Menunggu Keputusan Pasien
+                            </span>
+                            <span className="p-1.5 bg-yellow-100 rounded-md text-yellow-800 break-words max-w-[200px]">
+                               Cek kolom Status
+                            </span>
+                          </div>
+                        )}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-4 px-4 align-top">{apt.doctor?.name ?? "-"}</td>
+                      <td className="py-4 px-4 align-top">
+                        {new Date(apt.date).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                      </td>
+                      <td className="py-4 px-4 align-top">
                         {TIME_SLOTS.find((t) => t.value === apt.timeSlot)
                           ?.label ?? apt.timeSlot}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-4 px-4 align-top">
                         <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${badgeClass}`}
+                          className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${badgeClass}`}
                         >
                           {statusLabel(apt.status)}
                         </span>
                       </td>
-                      <td className="py-3 px-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mr-2 bg-transparent"
-                          disabled={
-                            apt.status === "CANCELLED" ||
-                            apt.status === "COMPLETED"
-                          }
-                          onClick={() => openEditModal(apt)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive bg-transparent"
-                          disabled={
-                            mutatingId === apt.id ||
-                            apt.status === "CANCELLED" ||
-                            apt.status === "COMPLETED"
-                          }
-                          onClick={() => cancelAppointment(apt.id)}
-                        >
-                          {mutatingId === apt.id ? "Cancelling..." : "Cancel"}
-                        </Button>
+                      <td className="py-4 px-4 align-top">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-transparent"
+                            disabled={
+                              apt.status === "CANCELLED" ||
+                              apt.status === "COMPLETED"
+                            }
+                            onClick={() => openEditModal(apt)}
+                          >
+                            Reschedule
+                          </Button>
+                        </div>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
+                  </Fragment>
+                );
+              })}
+            </tbody>
             </table>
           </div>
         )}
@@ -369,16 +429,6 @@ export function AppointmentsView() {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">
-                    Keterangan (shown to user)
-                  </div>
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
                 </div>
               </div>
             )}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 // ================= VALIDATION =================
 
@@ -50,8 +51,40 @@ export async function POST(req: Request) {
     return NextResponse.json(parsed.error.format(), { status: 400 });
   }
 
+  const { name, email, phone } = parsed.data;
+
+  // 1. Create a User with DOCTOR role and default password
+  const defaultPassword = "Klinik123!";
+  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+  
+  let userId: string | null = null;
+  
+  try {
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        phoneNumber: phone || null,
+        role: "DOCTOR",
+      },
+    });
+    userId = user.id;
+  } catch (err: any) {
+    if (err.code === "P2002") {
+      return NextResponse.json({ error: "Email already exists in the system" }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Failed to create authentication user" }, { status: 500 });
+  }
+
+  // 2. Create the Doctor profile linked to the user
   const doctor = await prisma.doctor.create({
-    data: parsed.data,
+    data: {
+      name,
+      email,
+      phone,
+      userId,
+    },
   });
 
   return NextResponse.json(doctor);
@@ -97,9 +130,26 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Doctor ID required" }, { status: 400 });
   }
 
+  // Find the doctor first to get the userId
+  const doctor = await prisma.doctor.findUnique({
+    where: { id },
+  });
+
+  if (!doctor) {
+    return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
+  }
+
+  // Delete doctor profile
   await prisma.doctor.delete({
     where: { id },
   });
+
+  // Delete the linked User account if it exists
+  if (doctor.userId) {
+    await prisma.user.delete({
+      where: { id: doctor.userId },
+    }).catch(e => console.error("Failed to delete linked user:", e));
+  }
 
   return NextResponse.json({ success: true });
 }

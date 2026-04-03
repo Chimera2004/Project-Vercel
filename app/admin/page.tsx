@@ -7,10 +7,12 @@ import { DashboardView } from "@/components/admin/dashboard-view";
 import { InventoryView } from "@/components/admin/inventory-view";
 import { AppointmentsView } from "@/components/admin/appointments-view";
 import { UsersView } from "@/components/admin/users-view";
+import { PharmacyView } from "@/components/admin/pharmacy-view";
+import { FulfillmentView } from "@/components/admin/fulfillment-view";
 import BookingPage from "@/app/booking/page";
 import StorePage from "@/app/store/page";
 
-type AdminView = "dashboard" | "appointments" | "users" | "inventory";
+type AdminView = "dashboard" | "appointments" | "users" | "inventory" | "pharmacy" | "fulfillment";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -156,7 +158,7 @@ export default function AdminPage() {
                 ? "bg-primary/10"
                 : "hover:bg-primary/10"
             }`}
-            onClick={() => setCurrentView("inventory")}
+             onClick={() => setCurrentView("inventory")}
             title="Inventory"
           >
             <span
@@ -169,6 +171,50 @@ export default function AdminPage() {
               📦
             </span>
             <span className="sr-only">Inventory</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`w-12 h-12 rounded-lg ${
+              currentView === "pharmacy"
+                ? "bg-primary/10"
+                : "hover:bg-primary/10"
+            }`}
+             onClick={() => setCurrentView("pharmacy")}
+            title="Apotek & Kasir"
+          >
+            <span
+              className={`text-lg ${
+                currentView === "pharmacy"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              }`}
+            >
+              💊
+            </span>
+            <span className="sr-only">Apotek & Kasir</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`w-12 h-12 rounded-lg ${
+              currentView === "fulfillment"
+                ? "bg-primary/10"
+                : "hover:bg-primary/10"
+            }`}
+             onClick={() => setCurrentView("fulfillment")}
+            title="Logistik & Kiriman"
+          >
+            <span
+              className={`text-lg ${
+                currentView === "fulfillment"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              }`}
+            >
+              🚚
+            </span>
+            <span className="sr-only">Logistik & Kiriman</span>
           </Button>
         </nav>
         <div className="flex-grow" />
@@ -205,6 +251,8 @@ export default function AdminPage() {
             {currentView === "appointments" && "Appointments"}
             {currentView === "users" && "Users"}
             {currentView === "inventory" && "Inventory Management"}
+            {currentView === "pharmacy" && "Apotek & Kasir"}
+            {currentView === "fulfillment" && "Logistik & Ekspedisi"}
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">Welcome, Admin!</span>
@@ -215,6 +263,8 @@ export default function AdminPage() {
         {currentView === "appointments" && <AppointmentsView />}
         {currentView === "users" && <UsersView />}
         {currentView === "inventory" && <InventoryView />}
+        {currentView === "pharmacy" && <PharmacyView />}
+        {currentView === "fulfillment" && <FulfillmentView />}
       </main>
     </div>
   );

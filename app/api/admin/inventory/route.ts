@@ -46,6 +46,7 @@ export async function GET() {
   }
 
   const products = await prisma.product.findMany({
+    where: { is_active: true },
     orderBy: { createdAt: "desc" },
   })
 
@@ -188,7 +189,10 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ message: "Missing product id" }, { status: 400 })
     }
   
-    await prisma.product.delete({ where: { id } })
+    await prisma.product.update({ 
+      where: { id },
+      data: { is_active: false }
+    })
   
     return NextResponse.json({ success: true })
   }

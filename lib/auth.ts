@@ -47,7 +47,7 @@ export const authOptions: NextAuthOptions = {
       // ⬅️ SETIAP REQUEST API
       if (session.user) {
         session.user.id = token.id as string
-        session.user.role = token.role as "ADMIN" | "USER"
+        session.user.role = token.role as "ADMIN" | "USER" | "DOCTOR"
       }
       return session
     },

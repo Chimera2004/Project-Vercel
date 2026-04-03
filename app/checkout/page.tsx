@@ -21,6 +21,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
+import Swal from "sweetalert2";
 
 interface CartItem {
   id: string;
@@ -37,11 +39,21 @@ type OrderItemInput = {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [shippingInfo, setShippingInfo] = useState({
+    name: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    phone: "",
+    email: "",
+  });
 
   useEffect(() => {
     const pendingCart = localStorage.getItem("pendingCart");
@@ -81,6 +93,15 @@ export default function CheckoutPage() {
             id: item.id,
             quantity: item.quantity,
           })),
+          shipping: {
+            full_name: shippingInfo.name,
+            phone: shippingInfo.phone,
+            email: shippingInfo.email,
+            address: shippingInfo.address,
+            city: shippingInfo.city,
+            state: shippingInfo.state,
+            zipCode: shippingInfo.zip,
+          }
         }),
       });
 
@@ -93,13 +114,27 @@ export default function CheckoutPage() {
         setOrderComplete(true);
 
         localStorage.removeItem("pendingCart");
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Pesanan Dibuat!',
+          text: 'Harap selesaikan pembayaran Anda di menu Billing.'
+        });
       } else {
         console.error("[v0] Order placement failed:", data);
-        alert(data?.message || "Failed to place order. Please try again.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Pembelian Gagal',
+          text: data?.message || "Failed to place order. Please try again."
+        });
       }
     } catch (error) {
       console.error("[v0] Error during checkout:", error);
-      alert("An error occurred during checkout. Please try again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Terjadi Kesalahan',
+        text: "An error occurred during checkout. Please try again."
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -126,15 +161,14 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Stock has been automatically updated. You will receive an email
-                confirmation shortly with tracking information.
+                Your order has been recorded. Please proceed to the Billing section to complete your payment.
               </p>
               <div className="flex gap-3 justify-center">
                 <Button onClick={() => router.push("/store")} variant="outline">
                   Continue Shopping
                 </Button>
-                <Button onClick={() => router.push("/booking")}>
-                  Back to Dashboard
+                <Button onClick={() => router.push("/billing")}>
+                  Go to Billing
                 </Button>
               </div>
             </CardContent>
@@ -194,69 +228,41 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" />
+                  <Input id="name" value={shippingInfo.name} onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
-                  <Input id="address" />
+                  <Input id="address" value={shippingInfo.address} onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
-                    <Input id="city" />
+                    <Input id="city" value={shippingInfo.city} onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="state">State</Label>
-                    <Input id="state" />
+                    <Input id="state" value={shippingInfo.state} onChange={(e) => setShippingInfo({ ...shippingInfo, state: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="zip">ZIP Code</Label>
-                    <Input id="zip" />
+                    <Input id="zip" value={shippingInfo.zip} onChange={(e) => setShippingInfo({ ...shippingInfo, zip: e.target.value })} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" />
+                    <Input id="phone" value={shippingInfo.phone} onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" />
+                    <Input id="email" type="email" value={shippingInfo.email} onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })} />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Payment Information */}
-            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cardNumber">Card Number</Label>
-                  <Input id="cardNumber" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="expiry">Expiry Date</Label>
-                    <Input id="expiry" placeholder="MM/YY" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cvv">CVV</Label>
-                    <Input id="cvv" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cardName">Name on Card</Label>
-                  <Input id="cardName" />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Payment Information removed, handled in Billing page */}
           </div>
 
           {/* Order Summary */}
@@ -314,7 +320,7 @@ export default function CheckoutPage() {
                     <Button
                       className="w-full"
                       onClick={handlePlaceOrder}
-                      disabled={isProcessing}
+                      disabled={isProcessing || !Object.values(shippingInfo).every(val => val.trim() !== "")}
                     >
                       {isProcessing ? "Processing..." : "Place Order"}
                     </Button>

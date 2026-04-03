@@ -46,7 +46,7 @@ export async function PATCH(
 
     const existing = await prisma.appointment.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, date: true, timeSlot: true, notes: true },
     })
 
     if (!existing) {
@@ -102,6 +102,14 @@ export async function PATCH(
     }
 
     if (body.action === "RESCHEDULE") {
+      let oldNotes = existing.notes || "";
+      let originalSymptom = "";
+      if (oldNotes.includes("(Keluhan Awal Pasien: ")) {
+        originalSymptom = oldNotes.split("(Keluhan Awal Pasien: ")[1].split(")")[0];
+      } else if (!oldNotes.startsWith("Jadwal dipindah")) {
+        originalSymptom = oldNotes;
+      }
+
       const updated = await prisma.appointment.update({
         where: { id },
         data: {
@@ -112,13 +120,18 @@ export async function PATCH(
           ...(body.mode ? { mode: body.mode } : {}),
           ...(body.type ? { type: body.type } : {}),
 
-          // ini sesuai konsep kita: setelah diubah, status balik PENDING
-          status: AppointmentStatus.PENDING,
+          // ini sesuai konsep kita: setelah diubah, status balik WAITING_USER_CONFIRMATION untuk direview pasien
+          status: AppointmentStatus.WAITING_USER_CONFIRMATION,
 
-          // notes untuk jelasin ke user tanpa ubah total UI user
+          rescheduleRequested: false,
+          rescheduleNote: null,
+
+          // notes untuk jelasin ke user tentang perpindahan jadwal
           notes:
-            body.notes ??
-            "Jadwal diubah oleh klinik. Silakan cek detail appointment Anda.",
+            `Jadwal dipindah:\n` +
+            `Dari: ${existing.date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} (${existing.timeSlot})\n` +
+            `Menjadi: ${new Date(body.date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} (${body.timeSlot})` +
+            (originalSymptom ? `\n\n(Keluhan Awal Pasien: ${originalSymptom})` : ""),
         },
         select: {
           id: true,

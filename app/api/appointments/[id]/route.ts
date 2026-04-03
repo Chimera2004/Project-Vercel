@@ -24,23 +24,47 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
     const userId = await getAuthUserId();
     if (!userId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { status } = await req.json();
+    const { status, action, date, timeSlot, doctorId } = await req.json();
 
-    if (status !== "CANCELLED") {
+    if (action === "UPDATE_SCHEDULE") {
+      const isSpecialRole = session?.user?.role === "ADMIN";
+      const appt = await prisma.appointment.findFirst({
+        where: { id: params.id, ...(isSpecialRole ? {} : { userId }) },
+      });
+      if (!appt) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+      const updated = await prisma.appointment.update({
+        where: { id: params.id },
+        data: {
+          date: new Date(date),
+          timeSlot,
+          doctorId,
+          status: "PENDING"
+        }
+      });
+      return NextResponse.json(updated);
+    }
+
+    if (status !== "CANCELLED" && status !== "CONFIRMED") {
       return NextResponse.json(
-        { message: "Only CANCELLED is supported" },
+        { message: "Only CANCELLED and CONFIRMED are supported" },
         { status: 400 }
       );
     }
 
-    // Pastikan appointment milik user ini
+    // Pastikan appointment milik user ini atau user adalah Admin
+    const isSpecialRole = session?.user?.role === "ADMIN";
     const appt = await prisma.appointment.findFirst({
-      where: { id: params.id, userId },
+      where: { 
+        id: params.id, 
+        ...(isSpecialRole ? {} : { userId })
+      },
     });
 
     if (!appt) {
@@ -49,10 +73,47 @@ export async function PATCH(
 
     const updated = await prisma.appointment.update({
       where: { id: params.id },
-      data: { status: "CANCELLED" },
+      data: { status: status },
     });
 
     return NextResponse.json(updated);
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = await getAuthUserId();
+    if (!userId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const isSpecialRole = session?.user?.role === "ADMIN";
+    const appt = await prisma.appointment.findFirst({
+      where: { 
+        id: params.id, 
+        ...(isSpecialRole ? {} : { userId })
+      },
+    });
+
+    if (!appt) {
+      return NextResponse.json({ message: "Not found" }, { status: 404 });
+    }
+
+    await prisma.appointment.delete({
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({ success: true });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

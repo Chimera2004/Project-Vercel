@@ -200,12 +200,7 @@ export async function POST(req: Request) {
         },
       })
 
-      for (const it of items) {
-        await tx.product.update({
-          where: { id: it.id },
-          data: { quantity: { decrement: it.quantity } },
-        })
-      }
+      // Stock decrement removed here. Will be handled in billing API during payment.
 
       return order
     })

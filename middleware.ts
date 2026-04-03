@@ -10,6 +10,11 @@ export default withAuth({
         return token?.role === "ADMIN"
       }
 
+      // halaman doctor → hanya DOCTOR
+      if (pathname.startsWith("/doctor")) {
+        return token?.role === "DOCTOR"
+      }
+
       // halaman lain bebas
       return true
     },
@@ -17,5 +22,5 @@ export default withAuth({
 })
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/doctor/:path*"],
 }

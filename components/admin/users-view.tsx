@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import Swal from "sweetalert2";
 
 interface Doctor {
   id: number;
@@ -91,8 +92,10 @@ export function UsersView() {
       setShowEditDialog(false);
       setEditingUser(null);
       setEditFormData({});
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Profil Dokter diubah!' });
     } catch (error) {
       console.error("Error updating user:", error);
+      Swal.fire({ icon: 'error', title: 'Error', text: "Gagal mengupdate profil dokter." });
     }
   };
 
@@ -122,7 +125,7 @@ export function UsersView() {
 
   const handleAddAdmin = async () => {
     if (!newAdminData.name || !newAdminData.email || !newAdminData.phone) {
-      alert("Please fill in all fields");
+      Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Tolong lengkapi semua bidang.' });
       return;
     }
 
@@ -147,17 +150,26 @@ export function UsersView() {
         phone: "",
       });
 
-      alert("New admin added successfully!");
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Dokter berhasil ditambahkan!' });
     } catch (error) {
-      console.error("Error adding new admin:", error);
-      alert("Failed to add new admin. Please try again.");
+      console.error("Error adding new doctor:", error);
+      Swal.fire({ icon: 'error', title: 'Gagal', text: "Gagal menambahkan dokter baru. Silakan coba lagi." });
     } finally {
       setAddingAdmin(false);
     }
   };
 
   const handleDelete = async (user: Doctor) => {
-    if (!confirm(`Are you sure you want to delete ${user.name}?`)) return;
+    const result = await Swal.fire({
+      title: 'Hapus Dokter?',
+      text: `Anda yakin ingin menghapus data dokter ${user.name}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!'
+    });
+    if (!result.isConfirmed) return;
 
     try {
       const response = await fetch(`/api/admin/doctors?id=${user.id}`, {
@@ -169,10 +181,10 @@ export function UsersView() {
 
       // Hapus user dari state supaya tabel update
       setUsers(users.filter((u) => u.id !== user.id));
-      alert("User deleted successfully!");
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Dokter dihapus!' });
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("Failed to delete user. Please try again.");
+      Swal.fire({ icon: 'error', title: 'Gagal', text: "Gagal menghapus dokter. Silakan coba lagi." });
     }
   };
 
@@ -180,9 +192,9 @@ export function UsersView() {
     <>
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Doctor Management Table ({users.length} users)</CardTitle>
+          <CardTitle>Manajemen Dokter ({users.length} dokter)</CardTitle>
           <Button onClick={() => setShowAddAdminDialog(true)} className="gap-2">
-            +Admin
+            + Dokter
           </Button>
         </CardHeader>
         <CardContent>
@@ -265,7 +277,7 @@ export function UsersView() {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>Edit Dokter</DialogTitle>
           </DialogHeader>
           {editingUser && (
             <div className="space-y-4">
@@ -319,7 +331,7 @@ export function UsersView() {
       <Dialog open={showAddAdminDialog} onOpenChange={setShowAddAdminDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Admin</DialogTitle>
+            <DialogTitle>Tambah Dokter Baru</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -372,7 +384,7 @@ export function UsersView() {
               Cancel
             </Button>
             <Button onClick={handleAddAdmin} disabled={addingAdmin}>
-              {addingAdmin ? "Adding..." : "Add Admin"}
+              {addingAdmin ? "Sedang menambahkan..." : "Tambah Dokter"}
             </Button>
           </DialogFooter>
         </DialogContent>

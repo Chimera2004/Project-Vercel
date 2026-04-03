@@ -22,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -86,7 +87,11 @@ export default function UserProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) {
-      alert("User ID not found. Please log in again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'User ID Not Found',
+        text: 'Please log in again.'
+      });
       return;
     }
 
@@ -100,13 +105,19 @@ export default function UserProfilePage() {
 
       if (response.ok) {
         setIsEditing(false);
-        alert("Profile updated successfully!");
+        Swal.fire({
+          toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+          title: "Berhasil!", text: "Profile updated successfully!", icon: "success"
+        });
       } else {
-        alert("Failed to update profile. Please try again.");
+        Swal.fire({
+          toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+          title: "Gagal", text: "Failed to update profile. Please try again.", icon: "error"
+        });
       }
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert("Error saving profile. Please try again.");
+      Swal.fire({ icon: 'error', title: 'Oops...', text: 'Error saving profile. Please try again.' });
     } finally {
       setIsSaving(false);
     }

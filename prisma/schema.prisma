@@ -10,49 +10,52 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  DOCTOR
 }
 
 model User {
-  id          String   @id @default(cuid())
-  name        String
-  email       String   @unique
-  password    String
-  phoneNumber String?
-  dateOfBirth DateTime?
-  role        Role     @default(USER)
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  password     String
+  phoneNumber  String?
+  dateOfBirth  DateTime?
+  role         Role          @default(USER)
   appointments Appointment[]
   orders       Order[]
-  profile      UserProfile?  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  profile      UserProfile?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Doctor       Doctor?
 }
 
-
 model UserProfile {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  address           String?
-  city              String?
-  state             String?
-  zipCode           String?
+  address String?
+  city    String?
+  state   String?
+  zipCode String?
 
-  emergencyContact  String?
-  emergencyPhone    String?
+  emergencyContact String?
+  emergencyPhone   String?
 
-  medicalHistory    String?
+  medicalHistory String?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Doctor {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  phone     String?
-  isActive  Boolean  @default(true)
+  id       String  @id @default(cuid())
+  userId   String? @unique
+  user     User?   @relation(fields: [userId], references: [id])
+  name     String
+  email    String  @unique
+  phone    String?
+  isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -60,21 +63,26 @@ model Doctor {
   appointments Appointment[]
 }
 
-
 model Appointment {
-  id        String   @id @default(cuid())
-  userId    String
-  doctorId  String
-  date      DateTime
-  timeSlot  AppointmentTimeSlot
-  type      AppointmentType
-  mode      AppointmentMode
-  status    AppointmentStatus @default(PENDING)
-  notes     String?
-  zoomLink  String? 
+  id       String              @id @default(cuid())
+  userId   String
+  doctorId String
+  date     DateTime
+  timeSlot AppointmentTimeSlot
+  type     AppointmentType
+  mode     AppointmentMode
+  status   AppointmentStatus   @default(PENDING)
+  notes    String?
+  zoomLink String?
 
-  user      User     @relation(fields: [userId], references: [id])
-  doctor    Doctor   @relation(fields: [doctorId], references: [id])
+  rescheduleRequested Boolean @default(false)
+  rescheduleNote      String?
+
+  user   User   @relation(fields: [userId], references: [id])
+  doctor Doctor @relation(fields: [doctorId], references: [id])
+
+  medicalRecord MedicalRecord?
+  order         Order?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,6 +114,7 @@ enum AppointmentStatus {
   CONFIRMED
   COMPLETED
   CANCELLED
+  WAITING_USER_CONFIRMATION
 }
 
 enum ProductCategory {
@@ -116,18 +125,18 @@ enum ProductCategory {
 }
 
 model Product {
-  id              String   @id @default(cuid())
-  item_name       String
-  description     String
-  unit_price      Int
-  quantity        Int      @default(0)
-  reorder_Level   Int             @default(0) // reorder_level
-  supplier        String?         // supplier
-  category        ProductCategory
-  orderItems OrderItem[]
-  is_active       Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String          @id @default(cuid())
+  item_name     String
+  description   String
+  unit_price    Int
+  quantity      Int             @default(0)
+  reorder_Level Int             @default(0) // reorder_level
+  supplier      String? // supplier
+  category      ProductCategory
+  orderItems    OrderItem[]
+  is_active     Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 enum OrderStatus {
@@ -138,37 +147,39 @@ enum OrderStatus {
 }
 
 model Order {
-  id        String      @id @default(cuid())
+  id String @id @default(cuid())
 
   // Order punya pemilik user (kalau mau allow guest, userId dibuat optional)
-  userId    String?
-  user      User?       @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
-  status    OrderStatus @default(PENDING)
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
 
-  subtotal  Int
-  shipping  Int
-  tax       Int
-  total     Int
+  status OrderStatus @default(PENDING)
 
-  orderItems OrderItem[]
+  subtotal Int
+  shipping Int
+  tax      Int
+  total    Int
+
+  orderItems      OrderItem[]
   shippingAddress ShippingAddress?
 
-
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // relasi ke Order
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   // relasi ke Product
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 
   // snapshot data product saat checkout
   item_name  String
@@ -179,20 +190,33 @@ model OrderItem {
 }
 
 model ShippingAddress {
-  id        String  @id @default(cuid())
+  id String @id @default(cuid())
 
   // 1 order cuma punya 1 alamat kirim
-  orderId   String  @unique
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   full_name String
   phone     String
   email     String
 
-  address   String
-  city      String
-  state     String
-  zipCode   String
+  address String
+  city    String
+  state   String
+  zipCode String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MedicalRecord {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  diagnosis    String
+  prescription String? // Raw notes or JSON string for prescribed items
+  notes        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

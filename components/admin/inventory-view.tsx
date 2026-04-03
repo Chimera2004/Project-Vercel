@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, Plus, Trash2, Edit2, RefreshCw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import Swal from "sweetalert2";
 import { stockData } from "@/lib/store-data";
 
 interface InventoryItem {
@@ -143,12 +146,26 @@ export function InventoryView() {
       setInventory(updatedInventory);
       setEditingId(null);
       setEditValues({});
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Perubahan berhasil disimpan' });
     } catch (e) {
       console.error(e);
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'error', title: 'Gagal mengubah item' });
     }
   };
 
   const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Apakah Anda yakin?',
+      text: "Item ini akan disembunyikan dari toko dan inventaris.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!'
+    });
+
+    if (!result.isConfirmed) return;
+
     const res = await fetch("/api/admin/inventory", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -159,9 +176,11 @@ export function InventoryView() {
     if (!res.ok) {
       const errText = await res.text();
       console.error("Failed to delete item:", res.status, errText);
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'error', title: 'Gagal menghapus item: Barang ini terkait dengan pesanan pasien.' });
       return;
     }
 
+    Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Item berhasil dihapus' });
     await fetchInventory();
   };
 
@@ -219,8 +238,11 @@ export function InventoryView() {
       // 4) Reset add image state (biar ga nyangkut ke row lain)
       setAddImage(null);
       setAddPreview("");
+
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Item berhasil ditambahkan' });
     } catch (e) {
       console.error(e);
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'error', title: 'Gagal menambah item' });
     }
   };
 
@@ -353,106 +375,7 @@ export function InventoryView() {
         </Card>
       </div>
 
-      {/* Add New Item Form */}
-      {showAddForm && (
-        <Card className="bg-card/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Add New Item</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                placeholder="Item Name"
-                value={newItem.item_name || ""}
-                onChange={(e) =>
-                  setNewItem({ ...newItem, item_name: e.target.value })
-                }
-              />
-              <select
-                className="border rounded-md px-3 py-2 text-sm"
-                value={newItem.category || ""}
-                onChange={(e) =>
-                  setNewItem({ ...newItem, category: e.target.value })
-                }
-              >
-                <option value="">Select Category</option>
-                <option value="MEDICAL_DEVICE">Medical Device</option>
-                <option value="SUPPLEMENT">Supplement</option>
-                <option value="PRESCRIPTION">Prescription</option>
-                <option value="MEDICAL_SUPPLY">Medical Supply</option>
-              </select>
-
-              <Input
-                type="number"
-                placeholder="Quantity"
-                value={newItem.quantity || ""}
-                onChange={(e) =>
-                  setNewItem({
-                    ...newItem,
-                    quantity: Number.parseInt(e.target.value),
-                  })
-                }
-              />
-              <Input
-                type="number"
-                placeholder="Unit Price"
-                value={newItem.unit_price || ""}
-                onChange={(e) =>
-                  setNewItem({
-                    ...newItem,
-                    unit_price: Number.parseFloat(e.target.value) || 0,
-                  })
-                }
-              />
-              <Input
-                placeholder="Supplier"
-                value={newItem.supplier || ""}
-                onChange={(e) =>
-                  setNewItem({ ...newItem, supplier: e.target.value })
-                }
-              />
-              <Input
-                type="number"
-                placeholder="Reorder Level"
-                value={newItem.reorder_level || ""}
-                onChange={(e) =>
-                  setNewItem({
-                    ...newItem,
-                    reorder_level: Number.parseInt(e.target.value),
-                  })
-                }
-              />
-              <Input
-                placeholder="Description"
-                value={newItem.description || ""}
-                onChange={(e) =>
-                  setNewItem({ ...newItem, description: e.target.value })
-                }
-              />
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] ?? null;
-                  setAddImage(file);
-                  setAddPreview(file ? URL.createObjectURL(file) : "");
-                }}
-              />
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button
-                onClick={handleAddItem}
-                className="bg-primary hover:bg-primary/90"
-              >
-                Add Item
-              </Button>
-              <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Add New Item Form (Moved to Dialog at bottom) */}
 
       {!showAddForm && (
         <div className="flex gap-2 flex-wrap">
@@ -517,162 +440,6 @@ export function InventoryView() {
                       item.quantity <= item.reorder_level ? "bg-yellow-50" : ""
                     }`}
                   >
-                    {editingId === item.id ? (
-                      <>
-                        <td className="py-3 px-4">
-                          <Input
-                            value={editValues.item_name || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                item_name: e.target.value,
-                              })
-                            }
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <select
-                            className="h-8 w-full border rounded-md px-2 text-sm"
-                            value={editValues.category || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                category: e.target.value,
-                              })
-                            }
-                          >
-                            <option value="MEDICAL_DEVICE">
-                              Medical Device
-                            </option>
-                            <option value="SUPPLEMENT">Supplement</option>
-                            <option value="PRESCRIPTION">Prescription</option>
-                            <option value="MEDICAL_SUPPLY">
-                              Medical Supply
-                            </option>
-                          </select>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Input
-                            type="number"
-                            value={editValues.quantity || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                quantity: Number.parseInt(e.target.value) || 0,
-                              })
-                            }
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <Input
-                            type="number"
-                            value={editValues.reorder_level || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                reorder_level:
-                                  Number.parseInt(e.target.value) || 0,
-                              })
-                            }
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <Input
-                            type="number"
-                            value={editValues.unit_price || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                unit_price:
-                                  Number.parseFloat(e.target.value) || 0,
-                              })
-                            }
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <Input
-                            value={editValues.supplier || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                supplier: e.target.value,
-                              })
-                            }
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <Input
-                            value={editValues.description || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                description: e.target.value,
-                              })
-                            }
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={
-                                imagePreview ||
-                                `${getProductImage(
-                                  editValues.item_name || item.item_name
-                                )}?v=${imgBust[item.id] ?? 0}`
-                              }
-                              onError={(e) => {
-                                const img = e.currentTarget;
-                                if (img.dataset.fallbackApplied) return;
-                                img.dataset.fallbackApplied = "1";
-                                img.src = "/store/default.png";
-                              }}
-                              className="h-10 w-10 rounded object-cover border"
-                            />
-
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0] ?? null;
-                                setSelectedImage(file);
-                                setImagePreview(
-                                  file ? URL.createObjectURL(file) : ""
-                                );
-                              }}
-                            />
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="mr-2 bg-transparent"
-                            onClick={() => handleSaveEdit(item.id)}
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setEditingId(null);
-                              setEditValues({});
-                              setSelectedImage(null);
-                              setImagePreview("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
                         <td className="py-3 px-4">{item.item_name}</td>
                         <td className="py-3 px-4">
                           {formatCategory(item.category)}
@@ -694,8 +461,7 @@ export function InventoryView() {
                         </td>
                         <td className="py-3 px-4">{item.supplier ?? "-"}</td>
                         <td
-                          className="py-3 px-4 max-w-[260px] truncate"
-                          title={item.description}
+                          className="py-3 px-4 min-w-[200px] max-w-[300px] whitespace-normal text-xs leading-relaxed"
                         >
                           {item.description || "-"}
                         </td>
@@ -731,8 +497,6 @@ export function InventoryView() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </td>
-                      </>
-                    )}
                   </tr>
                 ))}
               </tbody>
@@ -740,6 +504,156 @@ export function InventoryView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* --- ADD ITEM MODAL --- */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Add New Item</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Item Name</label>
+                <Input value={newItem.item_name || ""} onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Category</label>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newItem.category || ""} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}>
+                  <option value="">Select Category</option>
+                  <option value="MEDICAL_DEVICE">Medical Device</option>
+                  <option value="SUPPLEMENT">Supplement</option>
+                  <option value="PRESCRIPTION">Prescription</option>
+                  <option value="MEDICAL_SUPPLY">Medical Supply</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Quantity</label>
+                  <Input type="number" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number.parseInt(e.target.value) || 0 })} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Reorder Level</label>
+                  <Input type="number" value={newItem.reorder_level || ""} onChange={(e) => setNewItem({ ...newItem, reorder_level: Number.parseInt(e.target.value) || 0 })} />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Unit Price (Rp)</label>
+                <Input type="number" value={newItem.unit_price || ""} onChange={(e) => setNewItem({ ...newItem, unit_price: Number.parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Supplier</label>
+                <Input value={newItem.supplier || ""} onChange={(e) => setNewItem({ ...newItem, supplier: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Description</label>
+                <Textarea className="resize-none min-h-[80px]" value={newItem.description || ""} onChange={(e) => setNewItem({ ...newItem, description: e.target.value })} />
+              </div>
+            </div>
+            
+            <div className="space-y-4 flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-muted/20">
+              <span className="text-sm font-medium mb-2 text-muted-foreground w-full text-center">Product Image Preview</span>
+              {addPreview ? (
+                <img src={addPreview} alt="Preview" className="max-w-[200px] h-auto object-cover rounded shadow border" />
+              ) : (
+                <div className="w-48 h-48 bg-muted flex items-center justify-center rounded border text-muted-foreground">No image</div>
+              )}
+              <div className="w-full">
+                <Input type="file" accept="image/*" onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setAddImage(file);
+                  setAddPreview(file ? URL.createObjectURL(file) : "");
+                }} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="mt-6 border-t pt-4">
+            <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
+            <Button onClick={handleAddItem} className="bg-primary">Save Item</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* --- EDIT ITEM MODAL --- */}
+      <Dialog open={!!editingId} onOpenChange={(open) => {
+        if (!open) {
+          setEditingId(null);
+          setEditValues({});
+          setSelectedImage(null);
+          setImagePreview("");
+        }
+      }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Edit Item</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Item Name</label>
+                <Input value={editValues.item_name || ""} onChange={(e) => setEditValues({ ...editValues, item_name: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Category</label>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={editValues.category || ""} onChange={(e) => setEditValues({ ...editValues, category: e.target.value })}>
+                  <option value="MEDICAL_DEVICE">Medical Device</option>
+                  <option value="SUPPLEMENT">Supplement</option>
+                  <option value="PRESCRIPTION">Prescription</option>
+                  <option value="MEDICAL_SUPPLY">Medical Supply</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Quantity</label>
+                  <Input type="number" value={editValues.quantity || ""} onChange={(e) => setEditValues({ ...editValues, quantity: Number.parseInt(e.target.value) || 0 })} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Reorder Level</label>
+                  <Input type="number" value={editValues.reorder_level || ""} onChange={(e) => setEditValues({ ...editValues, reorder_level: Number.parseInt(e.target.value) || 0 })} />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Unit Price (Rp)</label>
+                <Input type="number" value={editValues.unit_price || ""} onChange={(e) => setEditValues({ ...editValues, unit_price: Number.parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Supplier</label>
+                <Input value={editValues.supplier || ""} onChange={(e) => setEditValues({ ...editValues, supplier: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Description</label>
+                <Textarea className="resize-none min-h-[80px]" value={editValues.description || ""} onChange={(e) => setEditValues({ ...editValues, description: e.target.value })} />
+              </div>
+            </div>
+            
+            <div className="space-y-4 flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-muted/20">
+              <span className="text-sm font-medium mb-2 text-muted-foreground w-full text-center">Product Image Preview</span>
+              <img
+                src={imagePreview || (editingId ? `${getProductImage(editValues.item_name || "")}?v=${imgBust[editingId] ?? 0}` : "/store/default.png")}
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.dataset.fallbackApplied) return;
+                  img.dataset.fallbackApplied = "1";
+                  img.src = "/store/default.png";
+                }}
+                className="max-w-[200px] h-auto object-cover rounded shadow border bg-white"
+                alt="Product Preview"
+              />
+              <div className="w-full">
+                <Input type="file" accept="image/*" onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setSelectedImage(file);
+                  setImagePreview(file ? URL.createObjectURL(file) : "");
+                }} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="mt-6 border-t pt-4">
+            <Button variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+            <Button onClick={() => editingId && handleSaveEdit(editingId)} className="bg-primary">Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

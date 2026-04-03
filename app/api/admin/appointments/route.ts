@@ -73,6 +73,8 @@ export async function GET(req: Request) {
         type: true,
         mode: true,
         notes: true,
+        rescheduleRequested: true,
+        rescheduleNote: true,
         createdAt: true,
         updatedAt: true,
         user: { select: { id: true, name: true, email: true } },
