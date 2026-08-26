@@ -7,6 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Receipt, CreditCard, ArrowLeft, CheckCircle2, History, Eye } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import Swal from "sweetalert2";
 
 interface OrderItem {
@@ -39,6 +46,10 @@ export default function BillingPage() {
   
   // Info Box status
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
+
+  // Pagination for History
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Delivery & Profile logic
   const [deliveryMode, setDeliveryMode] = useState<"PICKUP" | "DELIVERY">("PICKUP");
@@ -259,27 +270,54 @@ export default function BillingPage() {
                       Belum ada riwayat pembayaran.
                    </div>
                ) : (
-                   <div className="space-y-3">
-                      {paidOrders.map(order => (
-                        <div key={order.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border border-slate-200 rounded-lg hover:bg-slate-50 gap-4">
-                           <div>
-                             <div className="flex items-center gap-2">
-                               <h4 className="font-semibold">
-                                 {order.appointment ? "Konsultasi Medis" : "Pembelian Apotek"} #{order.id.slice(-6).toUpperCase()}
-                               </h4>
-                               <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">LUNAS</Badge>
-                             </div>
-                             <p className="text-sm text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()} • {order.appointment?.doctor.name || "Apotek"}</p>
-                           </div>
-                           <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                             <p className="font-bold text-slate-800">{formatCurrency(order.total)}</p>
-                             <Button size="sm" variant="outline" onClick={() => handleOpenInfoBox(order)} className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
-                                <Eye className="w-4 h-4 mr-2" /> Detail
-                             </Button>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
+                    <div className="space-y-4">
+                       <div className="max-h-[400px] overflow-y-auto space-y-3 pr-1">
+                          {paidOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(order => (
+                            <div key={order.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border border-slate-200 rounded-lg hover:bg-slate-50 gap-4 bg-white shadow-sm">
+                               <div>
+                                 <div className="flex items-center gap-2">
+                                   <h4 className="font-semibold text-slate-800">
+                                     {order.appointment ? "Konsultasi Medis" : "Pembelian Apotek"} #{order.id.slice(-6).toUpperCase()}
+                                   </h4>
+                                   <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">LUNAS</Badge>
+                                 </div>
+                                 <p className="text-sm text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()} • {order.appointment?.doctor.name || "Apotek"}</p>
+                               </div>
+                               <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                                 <p className="font-bold text-slate-800">{formatCurrency(order.total)}</p>
+                                 <Button size="sm" variant="outline" onClick={() => handleOpenInfoBox(order)} className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm">
+                                    <Eye className="w-4 h-4 mr-2" /> Detail
+                                 </Button>
+                               </div>
+                            </div>
+                          ))}
+                       </div>
+
+                       {/* Pagination for History */}
+                       {paidOrders.length > itemsPerPage && (
+                         <div className="flex items-center justify-between pt-2">
+                            <p className="text-xs text-muted-foreground">
+                               Showing {Math.min(paidOrders.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(paidOrders.length, currentPage * itemsPerPage)} of {paidOrders.length} entries
+                            </p>
+                            <Pagination className="mx-0 w-auto">
+                               <PaginationContent>
+                                  <PaginationItem>
+                                     <PaginationPrevious 
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                     />
+                                  </PaginationItem>
+                                  <PaginationItem>
+                                     <PaginationNext 
+                                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(paidOrders.length / itemsPerPage), prev + 1))}
+                                        className={currentPage >= Math.ceil(paidOrders.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                     />
+                                  </PaginationItem>
+                               </PaginationContent>
+                            </Pagination>
+                         </div>
+                       )}
+                    </div>
                )}
             </CardContent>
           </Card>

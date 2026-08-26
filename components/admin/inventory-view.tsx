@@ -9,6 +9,13 @@ import { AlertCircle, Plus, Trash2, Edit2, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import Swal from "sweetalert2";
 import { stockData } from "@/lib/store-data";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface InventoryItem {
   id: string;
@@ -45,6 +52,10 @@ export function InventoryView() {
   const [imgBust, setImgBust] = useState<Record<string, number>>({});
   const [addImage, setAddImage] = useState<File | null>(null);
   const [addPreview, setAddPreview] = useState<string>("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const syncWithStoreData = async () => {
     try {
@@ -300,6 +311,7 @@ export function InventoryView() {
 
       const data: InventoryItem[] = await res.json();
       setInventory(data);
+      setCurrentPage(1); // Reset to page 1 on refresh
     } catch (err) {
       console.error("[inventory] fetch error:", err);
     } finally {
@@ -411,8 +423,9 @@ export function InventoryView() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="space-y-4">
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-md">
+              <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/50">
                   <th className="text-left py-2 px-4 font-medium">Item Name</th>
@@ -433,7 +446,7 @@ export function InventoryView() {
                 </tr>
               </thead>
               <tbody>
-                {inventory.map((item) => (
+                {inventory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item) => (
                   <tr
                     key={item.id}
                     className={`border-b border-border/50 hover:bg-muted/50 ${
@@ -502,6 +515,32 @@ export function InventoryView() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {inventory.length > itemsPerPage && (
+            <div className="flex items-center justify-between pt-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {Math.min(inventory.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(inventory.length, currentPage * itemsPerPage)} of {inventory.length} entries
+              </p>
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(inventory.length / itemsPerPage), prev + 1))}
+                      className={currentPage >= Math.ceil(inventory.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </div>
         </CardContent>
       </Card>
 

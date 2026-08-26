@@ -62,12 +62,36 @@ export default function CheckoutPage() {
         const cart = JSON.parse(pendingCart);
         console.log("[v0] Loaded cart from localStorage:", cart);
         setCartItems(cart);
-        localStorage.removeItem("pendingCart");
+        // Do NOT remove until order is placed successfully
       } catch (error) {
         console.error("[v0] Error loading cart:", error);
         setCartItems([]);
       }
     }
+  }, []);
+
+  // Autofill from profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/user/profile");
+        if (res.ok) {
+          const profile = await res.json();
+          setShippingInfo({
+            name: profile.name || "",
+            address: profile.address || "",
+            city: profile.city || "",
+            state: profile.state || "",
+            zip: profile.zipCode || "",
+            phone: profile.phoneNumber || "",
+            email: profile.email || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile for autofill:", error);
+      }
+    };
+    fetchProfile();
   }, []);
 
   const subtotal = cartItems.reduce(

@@ -5,6 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Package, Truck, CheckCircle2, AlertCircle, ShoppingBag, MapPin } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import Swal from "sweetalert2";
 
 type Order = {
@@ -23,8 +30,13 @@ export function FulfillmentView() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"PAID" | "SHIPPED" | "COMPLETED">("PAID");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   useEffect(() => {
     fetchOrders(activeTab);
+    setCurrentPage(1); // Reset to page 1 on tab change
   }, [activeTab]);
 
   const fetchOrders = async (status: string) => {
@@ -116,88 +128,115 @@ export function FulfillmentView() {
                Tidak ada pesanan di kategori ini.
              </div>
           ) : (
-             <div className="space-y-4">
-                {orders.map(order => {
-                  const isStore = !order.appointment;
-                  const isDelivery = !!order.shippingAddress;
-                  const isPickup = !isStore && !isDelivery; // Online appointment picked up
+              <div className="space-y-4">
+                <div className="max-h-[600px] overflow-y-auto space-y-4 pr-1">
+                  {orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(order => {
+                    const isStore = !order.appointment;
+                    const isDelivery = !!order.shippingAddress;
+                    const isPickup = !isStore && !isDelivery; // Online appointment picked up
 
-                  return (
-                    <div key={order.id} className="flex flex-col md:flex-row justify-between items-start md:items-stretch p-5 border rounded-xl hover:shadow-md transition-shadow gap-6 bg-white">
-                       <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-2">
-                             <Badge variant="outline" className={`flex items-center gap-1 ${isStore ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                               {isStore ? <ShoppingBag className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
-                               {isStore ? "Pesanan E-Commerce" : "Resep Pasien Online"}
-                             </Badge>
-                             <Badge className={isDelivery ? "bg-orange-100 hover:bg-orange-200 text-orange-800" : "bg-emerald-100 hover:bg-emerald-200 text-emerald-800"}>
-                               {isDelivery ? "Delivery (Dikirim)" : "Ambil di Klinik (Pick Up)"}
-                             </Badge>
-                          </div>
-                          
-                          <div>
-                            <h3 className="font-bold text-lg text-slate-800">{order.shippingAddress?.full_name || order.user.name}</h3>
-                            <p className="text-sm text-slate-500">{order.shippingAddress?.phone || order.user.phoneNumber}</p>
-                          </div>
-
-                          {isDelivery && order.shippingAddress && (
-                            <div className="bg-slate-50 p-3 rounded border border-slate-100 text-sm mt-2">
-                               <p className="font-semibold text-slate-700 mb-1">Alamat Pengiriman:</p>
-                               <p className="text-slate-600">{order.shippingAddress.address}</p>
-                               <p className="text-slate-600">{order.shippingAddress.city}, {order.shippingAddress.zipCode}</p>
+                    return (
+                      <div key={order.id} className="flex flex-col md:flex-row justify-between items-start md:items-stretch p-5 border rounded-xl hover:shadow-md transition-shadow gap-6 bg-white">
+                        <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline" className={`flex items-center gap-1 ${isStore ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                  {isStore ? <ShoppingBag className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
+                                  {isStore ? "Pesanan E-Commerce" : "Resep Pasien Online"}
+                                </Badge>
+                                <Badge className={isDelivery ? "bg-orange-100 hover:bg-orange-200 text-orange-800" : "bg-emerald-100 hover:bg-emerald-200 text-emerald-800"}>
+                                  {isDelivery ? "Delivery (Dikirim)" : "Ambil di Klinik (Pick Up)"}
+                                </Badge>
                             </div>
-                          )}
-
-                          <div className="pt-2">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Item yang Harus Disiapkan</p>
-                            <ul className="text-sm text-slate-700 space-y-1 bg-amber-50/50 p-2 rounded border border-amber-100/50">
-                              {order.orderItems.length > 0 ? order.orderItems.map((item, idx) => (
-                                <li key={idx} className="flex justify-between border-b border-amber-100 last:border-0 pb-1 last:pb-0">
-                                  <span>{item.item_name}</span>
-                                  <span className="font-bold">x{item.quantity}</span>
-                                </li>
-                              )) : (
-                                <li className="italic text-slate-400">- Hanya resep manual (Lihat detail CM) -</li>
-                              )}
-                            </ul>
-                          </div>
-                       </div>
-
-                       <div className="flex flex-col justify-between items-end border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6 w-full md:w-64">
-                          <div className="text-right w-full">
-                            <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Order ID</p>
-                            <p className="font-mono text-sm text-slate-800">#{order.id.slice(-8).toUpperCase()}</p>
                             
-                            <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mt-3 mb-1">Total Dibayar</p>
-                            <p className="text-xl font-bold text-indigo-700">{formatCurrency(order.total)}</p>
-                          </div>
+                            <div>
+                              <h3 className="font-bold text-lg text-slate-800">{order.shippingAddress?.full_name || order.user.name}</h3>
+                              <p className="text-sm text-slate-500">{order.shippingAddress?.phone || order.user.phoneNumber}</p>
+                            </div>
 
-                          <div className="w-full mt-4 space-y-2">
-                            {activeTab === "PAID" && isDelivery && (
-                              <Button onClick={() => updateStatus(order.id, "SHIPPED")} className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm text-sm h-11">
-                                <Truck className="w-4 h-4 mr-2" /> Tandai Dikirim (Shipped)
-                              </Button>
+                            {isDelivery && order.shippingAddress && (
+                              <div className="bg-slate-50 p-3 rounded border border-slate-100 text-sm mt-2">
+                                  <p className="font-semibold text-slate-700 mb-1">Alamat Pengiriman:</p>
+                                  <p className="text-slate-600">{order.shippingAddress.address}</p>
+                                  <p className="text-slate-600">{order.shippingAddress.city}, {order.shippingAddress.zipCode}</p>
+                              </div>
                             )}
-                            {activeTab === "PAID" && isPickup && (
-                              <Button onClick={() => updateStatus(order.id, "COMPLETED")} className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-sm text-sm h-11">
-                                <CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Selesai Diambil
-                              </Button>
-                            )}
-                            {activeTab === "SHIPPED" && (
-                              <Button onClick={() => updateStatus(order.id, "COMPLETED")} className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-sm text-sm h-11">
-                                <CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Paket Diterima
-                              </Button>
-                            )}
-                            {activeTab === "COMPLETED" && (
-                              <Button variant="outline" className="w-full bg-slate-100 text-slate-500 border-slate-200" disabled>
-                                Sudah Diselesaikan
-                              </Button>
-                            )}
-                          </div>
-                       </div>
-                    </div>
-                  );
-                })}
+
+                            <div className="pt-2">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Item yang Harus Disiapkan</p>
+                              <ul className="text-sm text-slate-700 space-y-1 bg-amber-50/50 p-2 rounded border border-amber-100/50">
+                                {order.orderItems.length > 0 ? order.orderItems.map((item, idx) => (
+                                  <li key={idx} className="flex justify-between border-b border-amber-100 last:border-0 pb-1 last:pb-0">
+                                    <span>{item.item_name}</span>
+                                    <span className="font-bold">x{item.quantity}</span>
+                                  </li>
+                                )) : (
+                                  <li className="italic text-slate-400">- Hanya resep manual (Lihat detail CM) -</li>
+                                )}
+                              </ul>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col justify-between items-end border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6 w-full md:w-64">
+                            <div className="text-right w-full">
+                              <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Order ID</p>
+                              <p className="font-mono text-sm text-slate-800">#{order.id.slice(-8).toUpperCase()}</p>
+                              
+                              <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mt-3 mb-1">Total Dibayar</p>
+                              <p className="text-xl font-bold text-indigo-700">{formatCurrency(order.total)}</p>
+                            </div>
+
+                            <div className="w-full mt-4 space-y-2">
+                              {activeTab === "PAID" && isDelivery && (
+                                <Button onClick={() => updateStatus(order.id, "SHIPPED")} className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm text-sm h-11">
+                                  <Truck className="w-4 h-4 mr-2" /> Tandai Dikirim (Shipped)
+                                </Button>
+                              )}
+                              {activeTab === "PAID" && isPickup && (
+                                <Button onClick={() => updateStatus(order.id, "COMPLETED")} className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-sm text-sm h-11">
+                                  <CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Selesai Diambil
+                                </Button>
+                              )}
+                              {activeTab === "SHIPPED" && (
+                                <Button onClick={() => updateStatus(order.id, "COMPLETED")} className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-sm text-sm h-11">
+                                  <CheckCircle2 className="w-4 h-4 mr-2" /> Tandai Paket Diterima
+                                </Button>
+                              )}
+                              {activeTab === "COMPLETED" && (
+                                <Button variant="outline" className="w-full bg-slate-100 text-slate-500 border-slate-200" disabled>
+                                  Sudah Diselesaikan
+                                </Button>
+                              )}
+                            </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination Controls */}
+                {orders.length > itemsPerPage && (
+                  <div className="flex items-center justify-between pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {Math.min(orders.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(orders.length, currentPage * itemsPerPage)} of {orders.length} entries
+                    </p>
+                    <Pagination className="mx-0 w-auto">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(prev => Math.min(Math.ceil(orders.length / itemsPerPage), prev + 1))}
+                            className={currentPage >= Math.ceil(orders.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
              </div>
           )}
         </CardContent>

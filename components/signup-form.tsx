@@ -16,6 +16,16 @@ import {
 } from "@/components/ui/card";
 import { Eye, EyeOff, Heart, Shield, ArrowLeft } from "lucide-react";
 
+function getMaxDateOfBirth(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getMinDateOfBirth(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 120);
+  return d.toISOString().split("T")[0];
+}
+
 export function SignUpForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
@@ -57,6 +67,22 @@ export function SignUpForm() {
 
     if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters long!";
+    }
+
+    // Date of Birth validation
+    if (formData.dateOfBirth) {
+      const dob = new Date(formData.dateOfBirth);
+      const today = new Date();
+      const minDate = new Date();
+      minDate.setFullYear(minDate.getFullYear() - 120);
+
+      if (dob > today) {
+        newErrors.dateOfBirth = "Date of birth cannot be in the future.";
+      } else if (dob < minDate) {
+        newErrors.dateOfBirth = "Please enter a valid date of birth.";
+      }
+    } else {
+      newErrors.dateOfBirth = "Date of birth is required.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -195,7 +221,8 @@ export function SignUpForm() {
                   handleInputChange("dateOfBirth", e.target.value)
                 }
                 className="h-11 bg-background/50 border-border/50 focus:bg-background focus:border-primary/50"
-                max="2025-12-31"
+                max={getMaxDateOfBirth()}
+                min={getMinDateOfBirth()}
                 required
               />
               {errors.dateOfBirth && (

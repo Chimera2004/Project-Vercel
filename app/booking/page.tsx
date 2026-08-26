@@ -18,6 +18,20 @@ interface Appointment {
 interface Doctor { id: string; name: string; email?: string; phone?: string; isActive?: boolean; }
 type BookingForm = { date: string; timeSlot: string; doctorId: string; type: string; mode: string; notes?: string; };
 
+// Map each time slot enum → its hour (24h)
+const TIME_SLOT_HOURS: Record<string, number> = {
+  NINE: 9, TEN: 10, ELEVEN: 11, TWO: 14, THREE: 15, FOUR: 16,
+};
+
+// Returns true if a slot is no longer bookable.
+// Booking must be made at least 1 day in advance (no same-day booking).
+function isSlotDisabled(dateStr: string, slot: string): boolean {
+  if (!dateStr) return false;
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  return dateStr <= todayStr; // block today and any past date
+}
+
 export default function BookingPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const router = useRouter();
@@ -172,6 +186,16 @@ export default function BookingPage() {
       return;
     }
 
+    // Time limit validation: no same-day booking allowed
+    if (isSlotDisabled(bookingForm.date, bookingForm.timeSlot)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Slot Tidak Tersedia',
+        text: "Pendaftaran harus dilakukan minimal H-1 (sehari sebelum jadwal). Silakan pilih tanggal besok atau lebih.",
+      });
+      return;
+    }
+
     try {
       const res = await fetch("/api/appointments", {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
@@ -294,10 +318,12 @@ export default function BookingPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Select Date *</label>
                     <input
-                      type="date" required min={new Date().toISOString().split("T")[0]}
+                      type="date" required
+                      min={(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()}
                       value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
                       className="w-full h-11 px-3 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50"
                     />
+                    <p className="text-xs text-muted-foreground">Booking must be made at least 1 day in advance.</p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Select Time *</label>
@@ -306,13 +332,27 @@ export default function BookingPage() {
                       className="w-full h-11 px-3 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50"
                     >
                       <option value="">Choose time</option>
-                      <option value="NINE">9:00 AM</option>
-                      <option value="TEN">10:00 AM</option>
-                      <option value="ELEVEN">11:00 AM</option>
-                      <option value="TWO">2:00 PM</option>
-                      <option value="THREE">3:00 PM</option>
-                      <option value="FOUR">4:00 PM</option>
+                      {([
+                        { value: "NINE",   label: "9:00 AM" },
+                        { value: "TEN",    label: "10:00 AM" },
+                        { value: "ELEVEN", label: "11:00 AM" },
+                        { value: "TWO",    label: "2:00 PM" },
+                        { value: "THREE",  label: "3:00 PM" },
+                        { value: "FOUR",   label: "4:00 PM" },
+                      ] as const).map(({ value, label }) => {
+                        const disabled = isSlotDisabled(bookingForm.date, value);
+                        return (
+                          <option key={value} value={value} disabled={disabled}>
+                            {label}{disabled ? " (Not Available)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
+                    {bookingForm.date && (
+                      <p className="text-xs text-muted-foreground">
+                        All time slots are available for the selected date.
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">

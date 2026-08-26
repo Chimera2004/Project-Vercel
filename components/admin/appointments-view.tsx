@@ -13,6 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -83,6 +91,10 @@ export function AppointmentsView() {
   const [dateValue, setDateValue] = useState<string>(""); // YYYY-MM-DD
   const [timeSlot, setTimeSlot] = useState<string>("TEN");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   async function loadAppointments(selectedRange: RangeKey) {
     const res = await fetch(
       `/api/admin/appointments?take=100&range=${selectedRange}`,
@@ -124,6 +136,7 @@ export function AppointmentsView() {
 
   useEffect(() => {
     refresh();
+    setCurrentPage(1); // Reset to page 1 when range changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range]);
 
@@ -281,8 +294,9 @@ export function AppointmentsView() {
             No appointments in this range.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="space-y-4">
+            <div className="overflow-x-auto max-h-[450px] overflow-y-auto border rounded-md">
+              <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/50">
                   <th className="text-left py-2 px-4 font-medium">Pasien</th>
@@ -294,7 +308,7 @@ export function AppointmentsView() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((apt) => {
+                {rows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((apt) => {
                   const badgeClass =
                     apt.status === "CONFIRMED"
                       ? "bg-gray-100 text-gray-800 border-gray-200 border"
@@ -316,7 +330,7 @@ export function AppointmentsView() {
                         {apt.rescheduleRequested && (
                           <div className="mt-1 text-xs text-red-600 font-semibold flex flex-col gap-1">
                             <span className="flex items-center gap-1">
-                               ⚠️ Permintaan Reschedule Dokter:
+                                ⚠️ Permintaan Reschedule Dokter:
                             </span>
                             <span className="p-1.5 bg-red-100 rounded-md text-red-800 break-words max-w-[200px]">
                                {apt.rescheduleNote}
@@ -326,7 +340,7 @@ export function AppointmentsView() {
                         {apt.status === "WAITING_USER_CONFIRMATION" && !apt.rescheduleRequested && (
                           <div className="mt-1 text-xs text-yellow-600 font-semibold flex flex-col gap-1">
                             <span className="flex items-center gap-1">
-                               ⏳ Menunggu Keputusan Pasien
+                                ⏳ Menunggu Keputusan Pasien
                             </span>
                             <span className="p-1.5 bg-yellow-100 rounded-md text-yellow-800 break-words max-w-[200px]">
                                Cek kolom Status
@@ -372,7 +386,33 @@ export function AppointmentsView() {
             </tbody>
             </table>
           </div>
-        )}
+
+          {/* Pagination Controls */}
+          {rows.length > itemsPerPage && (
+            <div className="flex items-center justify-between pt-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {Math.min(rows.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(rows.length, currentPage * itemsPerPage)} of {rows.length} entries
+              </p>
+              <Pagination className="mx-0 w-auto">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(rows.length / itemsPerPage), prev + 1))}
+                      className={currentPage >= Math.ceil(rows.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </div>
+      )}
 
         {/* Reschedule Modal */}
         <Dialog open={open} onOpenChange={setOpen}>

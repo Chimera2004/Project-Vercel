@@ -9,6 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Package, User, Pill, ArrowRightCircle, CheckCircle2, Clock, Receipt } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import Swal from "sweetalert2";
 
 type PharmacyAppointment = {
@@ -47,8 +54,16 @@ export function PharmacyView() {
   const [extraFeeNote, setExtraFeeNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Pagination states
+  const [currentPageUnbilled, setCurrentPageUnbilled] = useState(1);
+  const [currentPageOrders, setCurrentPageOrders] = useState(1);
+  const itemsPerPageUnbilled = 5;
+  const itemsPerPageOrders = 10;
+
   useEffect(() => {
     fetchData(activeTab);
+    setCurrentPageUnbilled(1);
+    setCurrentPageOrders(1);
   }, [activeTab]);
 
   const fetchData = async (tab: ActiveTab) => {
@@ -169,22 +184,49 @@ export function PharmacyView() {
                </div>
              ) : (
                <div className="space-y-4">
-                 {unbilledList.map(appt => (
-                   <div key={appt.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg hover:bg-slate-50 transition-colors gap-4">
-                     <div>
-                       <div className="flex items-center gap-2">
-                         <h3 className="font-semibold text-lg">{appt.user.name}</h3>
-                         <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200">Pending Bill Compute</Badge>
+                 <div className="max-h-[500px] overflow-y-auto space-y-4 pr-1">
+                   {unbilledList.slice((currentPageUnbilled - 1) * itemsPerPageUnbilled, currentPageUnbilled * itemsPerPageUnbilled).map(appt => (
+                     <div key={appt.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg hover:bg-slate-50 transition-colors gap-4 bg-white">
+                       <div>
+                         <div className="flex items-center gap-2">
+                           <h3 className="font-semibold text-lg">{appt.user.name}</h3>
+                           <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200">Pending Bill Compute</Badge>
+                         </div>
+                         <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
+                           <User className="w-3.5 h-3.5" /> Dokter: {appt.doctor.name} • {format(new Date(appt.date), "dd MMM yyyy")}
+                         </p>
                        </div>
-                       <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
-                         <User className="w-3.5 h-3.5" /> Dokter: {appt.doctor.name} • {format(new Date(appt.date), "dd MMM yyyy")}
-                       </p>
+                       <Button onClick={() => openApptBill(appt)} className="w-full md:w-auto shadow-sm">
+                         Terbitkan Tagihan <ArrowRightCircle className="w-4 h-4 ml-2" />
+                       </Button>
                      </div>
-                     <Button onClick={() => openApptBill(appt)} className="w-full md:w-auto shadow-sm">
-                       Terbitkan Tagihan <ArrowRightCircle className="w-4 h-4 ml-2" />
-                     </Button>
+                   ))}
+                 </div>
+
+                 {/* Pagination for Unbilled */}
+                 {unbilledList.length > itemsPerPageUnbilled && (
+                   <div className="flex items-center justify-between pt-2">
+                     <p className="text-xs text-muted-foreground">
+                       Showing {Math.min(unbilledList.length, (currentPageUnbilled - 1) * itemsPerPageUnbilled + 1)} to {Math.min(unbilledList.length, currentPageUnbilled * itemsPerPageUnbilled)} of {unbilledList.length} entries
+                     </p>
+                     <Pagination className="mx-0 w-auto">
+                       <PaginationContent>
+                         <PaginationItem>
+                           <PaginationPrevious 
+                             onClick={() => setCurrentPageUnbilled(prev => Math.max(1, prev - 1))}
+                             className={currentPageUnbilled === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                           />
+                         </PaginationItem>
+                         <PaginationItem>
+                           <PaginationNext 
+                             onClick={() => setCurrentPageUnbilled(prev => Math.min(Math.ceil(unbilledList.length / itemsPerPageUnbilled), prev + 1))}
+                             className={currentPageUnbilled >= Math.ceil(unbilledList.length / itemsPerPageUnbilled) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                           />
+                         </PaginationItem>
+                       </PaginationContent>
+                     </Pagination>
                    </div>
-                 ))}
+                 )}
                </div>
              )
           ) : (
@@ -195,35 +237,62 @@ export function PharmacyView() {
                </div>
              ) : (
                <div className="space-y-4">
-                 {orderList.map(order => (
-                   <div key={order.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg hover:bg-slate-50 transition-colors gap-4">
-                     <div className="flex items-start gap-4">
-                       <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${order.status === "PAID" ? "bg-green-100" : "bg-blue-100"}`}>
-                         <Receipt className={`w-6 h-6 ${order.status === "PAID" ? "text-green-600" : "text-blue-600"}`} />
-                       </div>
-                       <div>
-                         <div className="flex items-center gap-2">
-                           <h3 className="font-semibold text-lg">{order.user?.name || "Anonim"}</h3>
-                           <Badge variant="outline" className={order.status === "PAID" ? "text-green-700 bg-green-50 border-green-200" : "text-blue-700 bg-blue-50 border-blue-200"}>
-                             {order.status === "PAID" ? "Sudah Lunas" : "Waiting Payment"}
-                           </Badge>
+                 <div className="max-h-[600px] overflow-y-auto space-y-4 pr-1">
+                   {orderList.slice((currentPageOrders - 1) * itemsPerPageOrders, currentPageOrders * itemsPerPageOrders).map(order => (
+                     <div key={order.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg hover:bg-slate-50 transition-colors gap-4 bg-white">
+                       <div className="flex items-start gap-4">
+                         <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${order.status === "PAID" ? "bg-green-100" : "bg-blue-100"}`}>
+                           <Receipt className={`w-6 h-6 ${order.status === "PAID" ? "text-green-600" : "text-blue-600"}`} />
                          </div>
-                         <p className="text-sm text-slate-500 mt-1">
-                           ID Tagihan: {order.id.slice(-8).toUpperCase()} • Dibuat: {format(new Date(order.createdAt), "dd MMM HH:mm")}
-                         </p>
-                         {order.appointment?.medicalRecord && (
-                           <p className="text-xs text-slate-400 mt-1 truncate max-w-[200px] sm:max-w-md">
-                             Diagnosa: {order.appointment.medicalRecord.diagnosis}
+                         <div>
+                           <div className="flex items-center gap-2">
+                             <h3 className="font-semibold text-lg">{order.user?.name || "Anonim"}</h3>
+                             <Badge variant="outline" className={order.status === "PAID" ? "text-green-700 bg-green-50 border-green-200" : "text-blue-700 bg-blue-50 border-blue-200"}>
+                               {order.status === "PAID" ? "Sudah Lunas" : "Waiting Payment"}
+                             </Badge>
+                           </div>
+                           <p className="text-sm text-slate-500 mt-1">
+                             ID Tagihan: {order.id.slice(-8).toUpperCase()} • Dibuat: {format(new Date(order.createdAt), "dd MMM HH:mm")}
                            </p>
-                         )}
+                           {order.appointment?.medicalRecord && (
+                             <p className="text-xs text-slate-400 mt-1 truncate max-w-[200px] sm:max-w-md">
+                               Diagnosa: {order.appointment.medicalRecord.diagnosis}
+                             </p>
+                           )}
+                         </div>
+                       </div>
+                       <div className="text-right">
+                         <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Total Tagihan</p>
+                         <p className="text-lg font-bold text-slate-800">{formatCurrency(order.total)}</p>
                        </div>
                      </div>
-                     <div className="text-right">
-                       <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Total Tagihan</p>
-                       <p className="text-lg font-bold text-slate-800">{formatCurrency(order.total)}</p>
-                     </div>
+                   ))}
+                 </div>
+
+                 {/* Pagination for Orders */}
+                 {orderList.length > itemsPerPageOrders && (
+                   <div className="flex items-center justify-between pt-2">
+                     <p className="text-xs text-muted-foreground">
+                       Showing {Math.min(orderList.length, (currentPageOrders - 1) * itemsPerPageOrders + 1)} to {Math.min(orderList.length, currentPageOrders * itemsPerPageOrders)} of {orderList.length} entries
+                     </p>
+                     <Pagination className="mx-0 w-auto">
+                       <PaginationContent>
+                         <PaginationItem>
+                           <PaginationPrevious 
+                             onClick={() => setCurrentPageOrders(prev => Math.max(1, prev - 1))}
+                             className={currentPageOrders === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                           />
+                         </PaginationItem>
+                         <PaginationItem>
+                           <PaginationNext 
+                             onClick={() => setCurrentPageOrders(prev => Math.min(Math.ceil(orderList.length / itemsPerPageOrders), prev + 1))}
+                             className={currentPageOrders >= Math.ceil(orderList.length / itemsPerPageOrders) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                           />
+                         </PaginationItem>
+                       </PaginationContent>
+                     </Pagination>
                    </div>
-                 ))}
+                 )}
                </div>
              )
           )}
@@ -232,7 +301,7 @@ export function PharmacyView() {
 
       {/* Bill Processing Dialog */}
       <Dialog open={openBill} onOpenChange={setOpenBill}>
-        <DialogContent className="sm:max-w-[700px] bg-background">
+        <DialogContent className="sm:max-w-[700px] bg-background max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Kalkulasi Tagihan (Billing)</DialogTitle>
             <DialogDescription>

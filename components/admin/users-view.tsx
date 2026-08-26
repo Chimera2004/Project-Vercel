@@ -11,6 +11,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import Swal from "sweetalert2";
 
 interface Doctor {
@@ -41,6 +48,10 @@ export function UsersView() {
   });
   const [addingAdmin, setAddingAdmin] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -55,6 +66,7 @@ export function UsersView() {
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data);
+      setCurrentPage(1); // Reset to page 1 on fetch
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -198,79 +210,106 @@ export function UsersView() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/50">
-                  <th className="text-left py-2 px-4 font-medium">Name</th>
-                  <th className="text-left py-2 px-4 font-medium">Email</th>
-                  <th className="text-left py-2 px-4 font-medium">Phone</th>
-                  <th className="text-left py-2 px-4 font-medium">Status</th>
-                  <th className="text-left py-2 px-4 font-medium">Joined</th>
-                  <th className="text-left py-2 px-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-border/50 hover:bg-muted/50"
-                  >
-                    <td className="py-3 px-4">{user.name}</td>
-                    <td className="py-3 px-4">{user.email}</td>
-                    <td className="py-3 px-4">{user.phone}</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          user.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {user.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 px-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mr-2 bg-transparent"
-                        onClick={() => handleEditClick(user)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`bg-transparent ${
-                          user.isActive ? "text-destructive" : "text-green-600"
-                        }`}
-                        onClick={() => handleDeactivate(user)}
-                      >
-                        {user.isActive ? "Deactivate" : "Activate"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-transparent text-red-600 ml-2"
-                        onClick={() => handleDelete(user)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
+          <div className="space-y-4">
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-md">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left py-2 px-4 font-medium">Name</th>
+                    <th className="text-left py-2 px-4 font-medium">Email</th>
+                    <th className="text-left py-2 px-4 font-medium">Phone</th>
+                    <th className="text-left py-2 px-4 font-medium">Status</th>
+                    <th className="text-left py-2 px-4 font-medium">Joined</th>
+                    <th className="text-left py-2 px-4 font-medium">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((user) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-border/50 hover:bg-muted/50"
+                    >
+                      <td className="py-3 px-4">{user.name}</td>
+                      <td className="py-3 px-4">{user.email}</td>
+                      <td className="py-3 px-4">{user.phone}</td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            user.isActive
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {user.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mr-2 bg-transparent"
+                          onClick={() => handleEditClick(user)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`bg-transparent ${
+                            user.isActive ? "text-destructive" : "text-green-600"
+                          }`}
+                          onClick={() => handleDeactivate(user)}
+                        >
+                          {user.isActive ? "Deactivate" : "Activate"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-transparent text-red-600 ml-2"
+                          onClick={() => handleDelete(user)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {users.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                No users found
+              </p>
+            )}
+
+            {/* Pagination Controls */}
+            {users.length > itemsPerPage && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {Math.min(users.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(users.length, currentPage * itemsPerPage)} of {users.length} entries
+                </p>
+                <Pagination className="mx-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.length / itemsPerPage), prev + 1))}
+                        className={currentPage >= Math.ceil(users.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
-          {users.length === 0 && (
-            <p className="text-center text-muted-foreground py-8">
-              No users found
-            </p>
-          )}
         </CardContent>
       </Card>
 

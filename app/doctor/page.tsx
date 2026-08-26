@@ -53,6 +53,7 @@ export default function DoctorDashboard() {
   const [bloodPressure, setBloodPressure] = useState("");
   const [temperature, setTemperature] = useState("");
   const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
   const [complaint, setComplaint] = useState("");
   const [sickLeave, setSickLeave] = useState("0");
   const [submitting, setSubmitting] = useState(false);
@@ -127,6 +128,7 @@ export default function DoctorDashboard() {
     setBloodPressure("");
     setTemperature("");
     setWeight("");
+    setHeight("");
     setSickLeave("0");
     setSelectedProducts([]);
     setExamineOpen(true);
@@ -137,7 +139,7 @@ export default function DoctorDashboard() {
     setSubmitting(true);
 
     const selectedDrugNames = selectedProducts.length > 0 ? selectedProducts.map(p => `${p.name} (x${p.qty || 1})`).join(", ") : "Tidak ada";
-    const combinedNotes = `[Vital] Tensi: ${bloodPressure || "-"} mmHg, Suhu: ${temperature || "-"} °C, Berat: ${weight || "-"} kg
+    const combinedNotes = `[Vital] Tensi: ${bloodPressure || "-"} mmHg, Suhu: ${temperature || "-"} °C, Berat: ${weight || "-"} kg, Tinggi: ${height || "-"} cm
 [Keluhan Pasien]: ${complaint || "-"}
 [Obat Apotek]: ${selectedDrugNames}
 [Tindakan & Resep Tambahan]: ${prescription || "-"}
@@ -359,7 +361,7 @@ export default function DoctorDashboard() {
                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                  Tanda Vital (Objective)
                </h3>
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground uppercase opacity-80">Tekanan Darah</label>
                     <div className="relative">
@@ -379,6 +381,13 @@ export default function DoctorDashboard() {
                     <div className="relative">
                       <Input type="number" placeholder="60" value={weight} onChange={(e) => setWeight(e.target.value)} className="h-10 pr-10 bg-background border-border/50" />
                       <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">kg</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase opacity-80">Tinggi Badan</label>
+                    <div className="relative">
+                      <Input type="number" placeholder="170" value={height} onChange={(e) => setHeight(e.target.value)} className="h-10 pr-10 bg-background border-border/50" />
+                      <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">cm</span>
                     </div>
                   </div>
                </div>

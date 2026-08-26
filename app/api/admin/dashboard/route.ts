@@ -47,11 +47,18 @@ export async function GET(req: Request) {
     const monthStart = startOfMonth(now)
 
     // KPI cards (tetap sama)
-    const [totalPatients, appointmentsToday, newRegistrations] = await Promise.all([
+    const [totalPatients, appointmentsToday, newRegistrations, totalRevenueBatch, lowStockCount] = await Promise.all([
       prisma.user.count({ where: { role: Role.USER } }),
       prisma.appointment.count({ where: { date: { gte: todayStart, lte: todayEnd } } }),
       prisma.user.count({ where: { role: Role.USER, createdAt: { gte: weekStart } } }),
+      prisma.order.aggregate({
+        where: { status: OrderStatus.PAID },
+        _sum: { total: true }
+      }),
+      prisma.product.count({ where: { quantity: { lt: 10 } } })
     ])
+
+    const totalRevenue = totalRevenueBatch._sum.total ?? 0;
 
     // Activity time window
     let activityFrom: Date
@@ -144,6 +151,8 @@ export async function GET(req: Request) {
       totalPatients,
       appointmentsToday,
       newRegistrations,
+      totalRevenue,
+      lowStockCount,
       activityRange,
       recentActivity: activity.slice(0, 12), 
     })
