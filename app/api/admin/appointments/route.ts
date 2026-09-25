@@ -31,6 +31,9 @@ export async function GET(req: Request) {
     if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     if (session.user.role !== "ADMIN") return NextResponse.json({ message: "Forbidden" }, { status: 403 })
 
+    const { autoExpirePastAppointments } = await import("@/lib/auto-expire-appointments");
+    await autoExpirePastAppointments();
+
     const { searchParams } = new URL(req.url)
     const take = Math.min(Number(searchParams.get("take") ?? 50), 200)
     const range = (searchParams.get("range") ?? "week").toLowerCase()

@@ -95,10 +95,13 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { autoExpirePastAppointments } = await import("@/lib/auto-expire-appointments");
+    await autoExpirePastAppointments();
+
     const appointments = await prisma.appointment.findMany({
       where: { userId }, 
       orderBy: { createdAt: "desc" },
-      include: { doctor: true },
+      include: { doctor: true, medicalRecord: true },
     });
 
     return NextResponse.json(appointments);

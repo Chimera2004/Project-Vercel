@@ -5,14 +5,28 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, User, LogOut, Plus, History, X, CheckCircle, Video, MapPin, ExternalLink, ShoppingBag, Receipt, Trash2 } from "lucide-react";
+import { Calendar, Clock, User, LogOut, Plus, History, X, CheckCircle, Video, MapPin, ExternalLink, ShoppingBag, Receipt, Trash2, FileText, Filter } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { formatPrescription } from "@/lib/prescription-formatter";
 
 interface Appointment {
   id: string; date: string; timeSlot: string; doctorId: string;
   type: string; mode: string; status: string; notes?: string; zoomLink?: string;
+  medicalRecord?: {
+    diagnosis?: string;
+    notes?: string;
+    prescription?: string;
+    vitals?: any;
+  };
 }
 
 interface Doctor { id: string; name: string; email?: string; phone?: string; isActive?: boolean; }
@@ -37,6 +51,14 @@ export default function BookingPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"book" | "history">("book");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  // History filtering & pagination state
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<"ALL" | "UPCOMING" | "COMPLETED" | "CANCELLED">("ALL");
+  const [historyTimeFilter, setHistoryTimeFilter] = useState<"ALL" | "WEEK" | "MONTH">("ALL");
+  const [historyPage, setHistoryPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const [selectedRecordModal, setSelectedRecordModal] = useState<Appointment | null>(null);
 
   const [reproposeModalOpen, setReproposeModalOpen] = useState(false);
   const [reproposeTarget, setReproposeTarget] = useState<Appointment | null>(null);
@@ -412,100 +434,230 @@ export default function BookingPage() {
 
         {activeTab === "history" && (
           <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <History className="w-5 h-5 text-primary" /> Appointment History
-              </CardTitle>
-              <CardDescription>View and manage your appointments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {appointments.map((appointment) => (
-                  <div key={appointment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border border-border/50 bg-background/30 gap-4 hover:border-primary/20 transition-colors">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${appointment.status === "COMPLETED" ? "bg-blue-100" : appointment.status === "CANCELLED" ? "bg-red-100" : "bg-primary/10"}`}>
-                        <User className={`w-6 h-6 ${appointment.status === "COMPLETED" ? "text-blue-600" : appointment.status === "CANCELLED" ? "text-red-500" : "text-primary"}`} />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-medium">{doctors.find((d) => d.id === appointment.doctorId)?.name || "Unknown Doctor"}</h3>
-                          <Badge className={getStatusColor(appointment.status)}>
-                            {appointment.status === "WAITING_USER_CONFIRMATION" ? "Waiting For Confirmation" : (appointment.status === "CONFIRMED" ? "Confirmed Pending" : appointment.status)}
-                          </Badge>
-                          <Badge variant="outline" className="flex items-center gap-1">
-                            {appointment.mode === "ONLINE" ? <><Video className="w-3 h-3 text-blue-500" /> Online</> : <><MapPin className="w-3 h-3 text-green-600" /> In-Person</>}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground capitalize">{appointment.type.replace("_", " ")}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(appointment.date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {timeSlotLabel(appointment.timeSlot)}</span>
-                        </div>
-                        
-                        {appointment.mode === "ONLINE" && appointment.status !== "CANCELLED" && appointment.status !== "COMPLETED" && (
-                          <div className="flex items-center gap-2 mt-3">
-                            <Button variant="outline" size="sm" onClick={() => window.open("https://zoom.us", "_blank")} className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
-                              <Video className="w-3 h-3" /> Join Video Call <ExternalLink className="w-3 h-3 ml-1" />
-                            </Button>
-                          </div>
-                        )}
-                        {appointment.notes && appointment.status !== "WAITING_USER_CONFIRMATION" && <p className="text-sm text-muted-foreground italic mt-2 border-l-2 border-slate-200 pl-2">Notes: {appointment.notes}</p>}
+            <CardHeader className="pb-4 border-b border-border/40">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5 text-primary" /> Riwayat Janji Temu Saya
+                  </CardTitle>
+                  <CardDescription>Lihat dan kelola seluruh jadwal pemeriksaan medis Anda</CardDescription>
+                </div>
 
-                        {appointment.status === "WAITING_USER_CONFIRMATION" && (
-                          <div className="w-full mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg shadow-sm">
-                            <p className="text-sm text-yellow-900 font-semibold mb-2">Pihak klinik mengajukan perubahan jadwal baru untuk Anda:</p>
-                            {(() => {
-                              let oldDateStr = null;
-                              let displayNotes = appointment.notes || "";
-                              if (displayNotes.startsWith("Jadwal dipindah")) {
-                                const match = displayNotes.match(/Dari:\s*(.+?)\n/);
-                                if (match) oldDateStr = match[1];
-                                displayNotes = displayNotes.replace(/Jadwal dipindah:\nDari:.*?\nMenjadi:.*?(?:\n\n|$)/s, "").trim();
-                              }
-                              return (
-                                <>
-                                  <div className="bg-white border border-yellow-300 rounded-md p-3 mb-3 text-sm">
-                                    <p><strong>Jadwal Lama: </strong> <span className="text-black">{oldDateStr ? oldDateStr : <span className="italic text-muted-foreground">(Data tidak tersedia untuk jadwal terdahulu)</span>}</span></p>
-                                    <p><strong>Jadwal Baru: </strong> <span className="text-black">{new Date(appointment.date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} ({timeSlotLabel(appointment.timeSlot)})</span></p>
+                {/* Time Filter */}
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <select 
+                    value={historyTimeFilter} 
+                    onChange={(e) => {
+                      setHistoryTimeFilter(e.target.value as any);
+                      setHistoryPage(1);
+                    }}
+                    className="h-9 px-3 text-xs font-medium border border-border/60 rounded-md bg-background shadow-sm"
+                  >
+                    <option value="ALL">Semua Waktu</option>
+                    <option value="WEEK">Minggu Ini</option>
+                    <option value="MONTH">Bulan Ini</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Status Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-2 pt-3">
+                {[
+                  { key: "ALL", label: "Semua Status" },
+                  { key: "UPCOMING", label: "Aktif / Mendatang" },
+                  { key: "COMPLETED", label: "Selesai" },
+                  { key: "CANCELLED", label: "Batal / Hangus" },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => {
+                      setHistoryStatusFilter(tab.key as any);
+                      setHistoryPage(1);
+                    }}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                      historyStatusFilter === tab.key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                {(() => {
+                  const filtered = appointments.filter((appt) => {
+                    // 1. Status Filter
+                    if (historyStatusFilter === "UPCOMING") {
+                      if (!["PENDING", "CONFIRMED", "WAITING_USER_CONFIRMATION"].includes(appt.status)) return false;
+                    } else if (historyStatusFilter === "COMPLETED") {
+                      if (appt.status !== "COMPLETED") return false;
+                    } else if (historyStatusFilter === "CANCELLED") {
+                      if (appt.status !== "CANCELLED") return false;
+                    }
+
+                    // 2. Time Filter
+                    if (historyTimeFilter !== "ALL") {
+                      const apptDate = new Date(appt.date);
+                      const now = new Date();
+                      const startOfWeek = new Date(now);
+                      startOfWeek.setDate(now.getDate() - now.getDay());
+                      startOfWeek.setHours(0, 0, 0, 0);
+                      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                      if (historyTimeFilter === "WEEK" && apptDate < startOfWeek) return false;
+                      if (historyTimeFilter === "MONTH" && apptDate < startOfMonth) return false;
+                    }
+
+                    return true;
+                  });
+
+                  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+                  const currentPageClamped = Math.min(historyPage, totalPages);
+                  const paginated = filtered.slice((currentPageClamped - 1) * itemsPerPage, currentPageClamped * itemsPerPage);
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-12 text-muted-foreground border border-dashed rounded-xl bg-slate-50/50 space-y-2">
+                        <History className="w-8 h-8 mx-auto text-slate-300" />
+                        <p className="text-sm font-medium">Tidak ada riwayat janji temu pada filter ini.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      {paginated.map((appointment) => (
+                        <div key={appointment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-border/50 bg-background/30 gap-4 hover:border-primary/30 transition-all shadow-sm">
+                          <div className="flex items-start gap-4">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${appointment.status === "COMPLETED" ? "bg-blue-100" : appointment.status === "CANCELLED" ? "bg-red-100" : "bg-primary/10"}`}>
+                              <User className={`w-6 h-6 ${appointment.status === "COMPLETED" ? "text-blue-600" : appointment.status === "CANCELLED" ? "text-red-500" : "text-primary"}`} />
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-medium">{doctors.find((d) => d.id === appointment.doctorId)?.name || "Dokter Klinik"}</h3>
+                                <Badge className={getStatusColor(appointment.status)}>
+                                  {appointment.status === "WAITING_USER_CONFIRMATION" ? "Menunggu Konfirmasi Anda" : (appointment.status === "CONFIRMED" ? "Terkonfirmasi (Mendatang)" : (appointment.status === "CANCELLED" ? "Batal / Hangus" : appointment.status))}
+                                </Badge>
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                  {appointment.mode === "ONLINE" ? <><Video className="w-3 h-3 text-blue-500" /> Online</> : <><MapPin className="w-3 h-3 text-green-600" /> In-Person</>}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground capitalize font-medium">{appointment.type.replace("_", " ")}</p>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(appointment.date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</span>
+                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {timeSlotLabel(appointment.timeSlot)}</span>
+                              </div>
+                              
+                              {appointment.mode === "ONLINE" && appointment.status !== "CANCELLED" && appointment.status !== "COMPLETED" && (
+                                <div className="flex items-center gap-2 mt-3">
+                                  <Button variant="outline" size="sm" onClick={() => window.open("https://zoom.us", "_blank")} className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200">
+                                    <Video className="w-3 h-3" /> Join Video Call <ExternalLink className="w-3 h-3 ml-1" />
+                                  </Button>
+                                </div>
+                              )}
+
+                              {appointment.status === "COMPLETED" && appointment.medicalRecord && (
+                                <div className="flex items-center gap-2 mt-3">
+                                  <Button variant="outline" size="sm" onClick={() => setSelectedRecordModal(appointment)} className="flex items-center gap-1 text-blue-700 bg-blue-50 hover:bg-blue-100 border-blue-200 text-xs font-semibold shadow-xs">
+                                    <FileText className="w-3.5 h-3.5" /> Detail Diagnosa & Resep
+                                  </Button>
+                                </div>
+                              )}
+
+                              {appointment.notes && appointment.status !== "WAITING_USER_CONFIRMATION" && <p className="text-xs text-muted-foreground italic mt-2 border-l-2 border-slate-200 pl-2">Catatan: {appointment.notes}</p>}
+
+                              {appointment.status === "WAITING_USER_CONFIRMATION" && (
+                                <div className="w-full mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg shadow-sm">
+                                  <p className="text-sm text-yellow-900 font-semibold mb-2">Pihak klinik mengajukan perubahan jadwal baru untuk Anda:</p>
+                                  {(() => {
+                                    let oldDateStr = null;
+                                    let displayNotes = appointment.notes || "";
+                                    if (displayNotes.startsWith("Jadwal dipindah")) {
+                                      const match = displayNotes.match(/Dari:\s*(.+?)\n/);
+                                      if (match) oldDateStr = match[1];
+                                      displayNotes = displayNotes.replace(/Jadwal dipindah:\nDari:.*?\nMenjadi:.*?(?:\n\n|$)/s, "").trim();
+                                    }
+                                    return (
+                                      <>
+                                        <div className="bg-white border border-yellow-300 rounded-md p-3 mb-3 text-sm">
+                                          <p><strong>Jadwal Lama: </strong> <span className="text-black">{oldDateStr ? oldDateStr : <span className="italic text-muted-foreground">(Data tidak tersedia untuk jadwal terdahulu)</span>}</span></p>
+                                          <p><strong>Jadwal Baru: </strong> <span className="text-black">{new Date(appointment.date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} ({timeSlotLabel(appointment.timeSlot)})</span></p>
+                                        </div>
+                                        {displayNotes && (
+                                          <div className="bg-yellow-100 border border-yellow-200 rounded-md p-3 mb-3">
+                                            <p className="text-sm text-yellow-800 font-medium italic whitespace-pre-wrap">{displayNotes}</p>
+                                          </div>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                  <p className="text-sm text-yellow-900 font-semibold mb-3">Silakan tentukan keputusan Anda:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button size="sm" onClick={() => confirmAppointment(appointment.id, "CONFIRMED")} className="bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-1 w-full sm:w-auto"><CheckCircle className="w-4 h-4"/> Terima Jadwal Baru</Button>
+                                    <Button size="sm" variant="outline" onClick={() => { 
+                                      setReproposeTarget(appointment); 
+                                      setReproposeForm({ date: appointment.date.split("T")[0], timeSlot: appointment.timeSlot, doctorId: appointment.doctorId }); 
+                                      setReproposeModalOpen(true); 
+                                    }} className="border-blue-400 text-blue-700 hover:bg-blue-50 flex items-center gap-1 w-full sm:w-auto"><Calendar className="w-4 h-4"/> Ajukan Jadwal Lain / Ganti Dokter</Button>
+                                    <Button size="sm" variant="outline" onClick={() => window.open("https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20berdiskusi%20mengenai%20jadwal%20klinik", "_blank")} className="border-green-400 text-green-700 hover:bg-green-50 flex items-center gap-1 w-full sm:w-auto"><ExternalLink className="w-4 h-4"/> Hubungi Klinik via WA</Button>
+                                    <Button size="sm" variant="outline" onClick={() => cancelAppointment(appointment.id)} className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 flex items-center gap-1 w-full sm:w-auto"><X className="w-4 h-4"/> Tolak & Batal</Button>
                                   </div>
-                                  {displayNotes && (
-                                    <div className="bg-yellow-100 border border-yellow-200 rounded-md p-3 mb-3">
-                                      <p className="text-sm text-yellow-800 font-medium italic whitespace-pre-wrap">{displayNotes}</p>
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                            <p className="text-sm text-yellow-900 font-semibold mb-3">Silakan tentukan keputusan Anda:</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Button size="sm" onClick={() => confirmAppointment(appointment.id, "CONFIRMED")} className="bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-1 w-full sm:w-auto"><CheckCircle className="w-4 h-4"/> Terima Jadwal Baru</Button>
-                              <Button size="sm" variant="outline" onClick={() => { 
-                                setReproposeTarget(appointment); 
-                                setReproposeForm({ date: appointment.date.split("T")[0], timeSlot: appointment.timeSlot, doctorId: appointment.doctorId }); 
-                                setReproposeModalOpen(true); 
-                              }} className="border-blue-400 text-blue-700 hover:bg-blue-50 flex items-center gap-1 w-full sm:w-auto"><Calendar className="w-4 h-4"/> Ajukan Jadwal Lain / Ganti Dokter</Button>
-                              <Button size="sm" variant="outline" onClick={() => window.open("https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20berdiskusi%20mengenai%20jadwal%20klinik", "_blank")} className="border-green-400 text-green-700 hover:bg-green-50 flex items-center gap-1 w-full sm:w-auto"><ExternalLink className="w-4 h-4"/> Hubungi Klinik via WA</Button>
-                              <Button size="sm" variant="outline" onClick={() => cancelAppointment(appointment.id)} className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 flex items-center gap-1 w-full sm:w-auto"><X className="w-4 h-4"/> Tolak & Batal</Button>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    {appointment.status !== "CANCELLED" && appointment.status !== "COMPLETED" && appointment.status !== "WAITING_USER_CONFIRMATION" && (
-                      <Button variant="outline" size="sm" onClick={() => cancelAppointment(appointment.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0">
-                        <X className="w-4 h-4 mr-1" /> Cancel Appointment
-                      </Button>
-                    )}
-                    {appointment.status === "CANCELLED" && (
-                      <Button variant="ghost" size="icon" onClick={() => deleteAppointment(appointment.id)} className="text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 md:self-center" title="Hapus dari Riwayat">
-                        <Trash2 className="w-5 h-5" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                {appointments.length === 0 && (
-                   <p className="text-center text-muted-foreground py-8">You have no appointment history.</p>
-                )}
+                          {appointment.status !== "CANCELLED" && appointment.status !== "COMPLETED" && appointment.status !== "WAITING_USER_CONFIRMATION" && (
+                            <Button variant="outline" size="sm" onClick={() => cancelAppointment(appointment.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0">
+                              <X className="w-4 h-4 mr-1" /> Batalkan Janji
+                            </Button>
+                          )}
+                          {appointment.status === "CANCELLED" && (
+                            <Button variant="ghost" size="icon" onClick={() => deleteAppointment(appointment.id)} className="text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 md:self-center" title="Hapus dari Riwayat">
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Pagination Controls */}
+                      {totalPages > 1 && (
+                        <div className="pt-4 border-t border-border/40">
+                          <Pagination>
+                            <PaginationContent>
+                              <PaginationItem>
+                                <PaginationPrevious
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    if (historyPage > 1) setHistoryPage(historyPage - 1);
+                                  }}
+                                  className={historyPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                                />
+                              </PaginationItem>
+                              <span className="text-xs font-semibold px-3 py-1 bg-slate-100 rounded-md">
+                                Hal {historyPage} dari {totalPages}
+                              </span>
+                              <PaginationItem>
+                                <PaginationNext
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    if (historyPage < totalPages) setHistoryPage(historyPage + 1);
+                                  }}
+                                  className={historyPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                                />
+                              </PaginationItem>
+                            </PaginationContent>
+                          </Pagination>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -550,6 +702,54 @@ export default function BookingPage() {
               <Button type="submit">Kirim Balasan</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Detail Rekam Medis & Resep Pasien */}
+      <Dialog open={!!selectedRecordModal} onOpenChange={(open) => !open && setSelectedRecordModal(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <FileText className="w-5 h-5 text-primary" /> Detail Rekam Medis & Resep
+            </DialogTitle>
+            <DialogDescription>
+              Hasil pemeriksaan dari dokter untuk kunjungan ini.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedRecordModal && (
+            <div className="space-y-4 py-2">
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1">
+                <p><strong>Dokter Pemeriksa:</strong> {doctors.find(d => d.id === selectedRecordModal.doctorId)?.name || "Dokter Klinik"}</p>
+                <p><strong>Tanggal Pemeriksaan:</strong> {new Date(selectedRecordModal.date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>
+                <p><strong>Tipe Layanan:</strong> <span className="capitalize">{selectedRecordModal.type.replace("_", " ")}</span> ({selectedRecordModal.mode})</p>
+              </div>
+
+              {/* Diagnosa Dokter */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700">Diagnosa / Catatan Dokter:</label>
+                <div className="p-3 bg-blue-50/50 border border-blue-200/60 rounded-lg text-xs text-blue-950 font-medium">
+                  {selectedRecordModal.medicalRecord?.diagnosis || selectedRecordModal.notes || "Tidak ada catatan diagnosa."}
+                </div>
+              </div>
+
+              {/* Resep Obat */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700">Resep & Aturan Minum Obat:</label>
+                <div className="p-3 bg-emerald-50/50 border border-emerald-200/60 rounded-lg text-xs text-emerald-950 whitespace-pre-wrap leading-relaxed font-mono">
+                  {selectedRecordModal.medicalRecord?.prescription
+                    ? formatPrescription(selectedRecordModal.medicalRecord.prescription)
+                    : "Tidak ada resep obat."}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setSelectedRecordModal(null)} className="w-full sm:w-auto">
+              Tutup
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

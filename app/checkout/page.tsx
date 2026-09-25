@@ -176,23 +176,22 @@ export default function CheckoutPage() {
                 </div>
               </div>
               <CardTitle className="text-2xl text-green-600">
-                Order Confirmed!
+                Pesanan Berhasil Dibuat!
               </CardTitle>
               <CardDescription>
-                Thank you for your purchase. Your order #{orderId} has been
-                confirmed.
+                Terima kasih atas pembelian Anda. Nomor pesanan Anda adalah <span className="font-semibold text-foreground">#INV-{orderId ? orderId.slice(-8).toUpperCase() : "-"}</span>.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Your order has been recorded. Please proceed to the Billing section to complete your payment.
+                Pesanan obat/alat medis Anda telah tercatat di sistem. Silakan lanjutkan ke menu **Billing & Tagihan** untuk menyelesaikan pembayaran.
               </p>
               <div className="flex gap-3 justify-center">
                 <Button onClick={() => router.push("/store")} variant="outline">
-                  Continue Shopping
+                  Lanjut Belanja Obat
                 </Button>
                 <Button onClick={() => router.push("/billing")}>
-                  Go to Billing
+                  Buka Menu Billing
                 </Button>
               </div>
             </CardContent>

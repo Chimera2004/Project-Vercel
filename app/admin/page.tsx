@@ -8,11 +8,11 @@ import { InventoryView } from "@/components/admin/inventory-view";
 import { AppointmentsView } from "@/components/admin/appointments-view";
 import { UsersView } from "@/components/admin/users-view";
 import { PharmacyView } from "@/components/admin/pharmacy-view";
-import { FulfillmentView } from "@/components/admin/fulfillment-view";
+import { PatientHistoryView } from "@/components/admin/patient-history-view";
 import BookingPage from "@/app/booking/page";
 import StorePage from "@/app/store/page";
 
-type AdminView = "dashboard" | "appointments" | "users" | "inventory" | "pharmacy" | "fulfillment";
+type AdminView = "dashboard" | "appointments" | "users" | "inventory" | "pharmacy" | "patient-history";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -198,23 +198,23 @@ export default function AdminPage() {
             variant="ghost"
             size="icon"
             className={`w-12 h-12 rounded-lg ${
-              currentView === "fulfillment"
+              currentView === "patient-history"
                 ? "bg-primary/10"
                 : "hover:bg-primary/10"
             }`}
-             onClick={() => setCurrentView("fulfillment")}
-            title="Logistik & Kiriman"
+             onClick={() => setCurrentView("patient-history")}
+            title="Riwayat Pasien"
           >
             <span
               className={`text-lg ${
-                currentView === "fulfillment"
+                currentView === "patient-history"
                   ? "text-primary"
                   : "text-muted-foreground"
               }`}
             >
-              🚚
+              📜
             </span>
-            <span className="sr-only">Logistik & Kiriman</span>
+            <span className="sr-only">Riwayat Pasien</span>
           </Button>
         </nav>
         <div className="flex-grow" />
@@ -252,7 +252,7 @@ export default function AdminPage() {
             {currentView === "users" && "Users"}
             {currentView === "inventory" && "Inventory Management"}
             {currentView === "pharmacy" && "Apotek & Kasir"}
-            {currentView === "fulfillment" && "Logistik & Ekspedisi"}
+            {currentView === "patient-history" && "Riwayat Kunjungan Pasien"}
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">Welcome, Admin!</span>
@@ -264,7 +264,7 @@ export default function AdminPage() {
         {currentView === "users" && <UsersView />}
         {currentView === "inventory" && <InventoryView />}
         {currentView === "pharmacy" && <PharmacyView />}
-        {currentView === "fulfillment" && <FulfillmentView />}
+        {currentView === "patient-history" && <PatientHistoryView />}
       </main>
     </div>
   );

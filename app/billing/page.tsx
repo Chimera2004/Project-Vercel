@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Receipt, CreditCard, ArrowLeft, CheckCircle2, History, Eye } from "lucide-react";
+import { Receipt, CreditCard, ArrowLeft, CheckCircle2, History, Eye, MapPin } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -15,6 +16,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import Swal from "sweetalert2";
+import { formatPrescription } from "@/lib/prescription-formatter";
 
 interface OrderItem {
   id: string;
@@ -61,21 +63,20 @@ export default function BillingPage() {
      try {
        const res = await fetch("/api/user/profile");
        if (res.ok) {
-          const json = await res.json();
-          if (json.data) {
-             const data = json.data;
-             setShippingInfo({
-                full_name: data.name || "",
-                email: data.email || "",
-                phone: data.phoneNumber || "",
-                address: data.profile?.address || "",
-                city: data.profile?.city || "",
-                state: data.profile?.state || "Jawa Barat",
-                zipCode: data.profile?.zipCode || ""
-             });
-          }
+          const data = await res.json();
+          setShippingInfo({
+             full_name: data.name || "",
+             email: data.email || "",
+             phone: data.phoneNumber || "",
+             address: data.address || "",
+             city: data.city || "",
+             state: data.state || "Jawa Barat",
+             zipCode: data.zipCode || ""
+          });
        }
-     } catch (e) {}
+     } catch (e) {
+        console.error("Failed to fetch user profile for billing delivery:", e);
+     }
   };
 
   useEffect(() => {
@@ -427,6 +428,22 @@ export default function BillingPage() {
                       <p className="text-sm font-black text-emerald-600 tracking-wider">LUNAS SUKSES</p>
                    </div>
                 </div>
+
+                {viewOrder.appointment?.medicalRecord && (
+                  <div className="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 mb-6 space-y-2 text-xs">
+                    <p className="font-bold text-indigo-900 uppercase text-[10px] tracking-wider">Catatan Rekam Medis Dokter</p>
+                    <div>
+                      <span className="font-semibold text-slate-700 block">Diagnosa:</span>
+                      <p className="text-slate-800 font-medium">{viewOrder.appointment.medicalRecord.diagnosis || "-"}</p>
+                    </div>
+                    {viewOrder.appointment.medicalRecord.prescription && (
+                      <div>
+                        <span className="font-semibold text-emerald-800 block">Resep & Aturan Obat:</span>
+                        <p className="text-emerald-900 whitespace-pre-line font-medium">{formatPrescription(viewOrder.appointment.medicalRecord.prescription)}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-3 mb-6">
                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Detail Rincian</p>

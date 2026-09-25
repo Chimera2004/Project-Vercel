@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Contact, User, LogOut, CheckCircle2, History, AlertCircle, Play, Stethoscope, Video, MapPin, X } from "lucide-react";
+import { Calendar, Clock, Contact, User, LogOut, CheckCircle2, History, AlertCircle, Play, Stethoscope, Video, MapPin, X, FileText } from "lucide-react";
 import Swal from "sweetalert2";
+import { formatPrescription } from "@/lib/prescription-formatter";
 
 type Appointment = {
   id: string;
@@ -23,6 +24,7 @@ type Appointment = {
   rescheduleRequested: boolean;
   rescheduleNote: string | null;
   user: {
+    id: string;
     name: string;
     email: string;
     phoneNumber: string;
@@ -44,6 +46,29 @@ export default function DoctorDashboard() {
   const [rescheduleId, setRescheduleId] = useState("");
   const [rescheduleReason, setRescheduleReason] = useState("");
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
+  
+  // Patient Clinical History State
+  const [patientHistoryOpen, setPatientHistoryOpen] = useState(false);
+  const [patientHistoryData, setPatientHistoryData] = useState<any>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const openPatientHistoryModal = async (userId: string) => {
+    setHistoryLoading(true);
+    setPatientHistoryOpen(true);
+    try {
+      const res = await fetch(`/api/doctor/patient-history/${userId}`);
+      if (res.ok) {
+        setPatientHistoryData(await res.json());
+      } else {
+        setPatientHistoryData(null);
+      }
+    } catch (e) {
+      console.error("Error fetching patient history:", e);
+      setPatientHistoryData(null);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
   
   // Advanced Form state
   const [diagnosis, setDiagnosis] = useState("");
@@ -138,11 +163,27 @@ export default function DoctorDashboard() {
     if (!selectedAppt || !diagnosis) return;
     setSubmitting(true);
 
-    const selectedDrugNames = selectedProducts.length > 0 ? selectedProducts.map(p => `${p.name} (x${p.qty || 1})`).join(", ") : "Tidak ada";
+    const formattedDrugList = selectedProducts.map(p => {
+      const qty = p.qty || 1;
+      const unit = p.unit || "Pcs";
+      const dosage = p.dosage || "Sesuai petunjuk dokter";
+      return `• ${p.name} (${qty} ${unit}) — Aturan: ${dosage}`;
+    });
+
+    let finalPrescriptionText = "";
+    if (formattedDrugList.length > 0) {
+      finalPrescriptionText += formattedDrugList.join("\n");
+    }
+    if (prescription && prescription.trim()) {
+      if (finalPrescriptionText) finalPrescriptionText += "\n";
+      finalPrescriptionText += `• Obat Racikan: ${prescription.trim()}`;
+    }
+
+    const selectedDrugNames = selectedProducts.length > 0 ? selectedProducts.map(p => `${p.name} (${p.qty || 1} ${p.unit || 'Pcs'})`).join(", ") : "Tidak ada";
     const combinedNotes = `[Vital] Tensi: ${bloodPressure || "-"} mmHg, Suhu: ${temperature || "-"} °C, Berat: ${weight || "-"} kg, Tinggi: ${height || "-"} cm
 [Keluhan Pasien]: ${complaint || "-"}
 [Obat Apotek]: ${selectedDrugNames}
-[Tindakan & Resep Tambahan]: ${prescription || "-"}
+[Tindakan & Resep Medis]: ${finalPrescriptionText || "-"}
 [Surat Sakit]: ${sickLeave === "0" ? "Tidak ada" : sickLeave + " Hari"}
 [Catatan Internal Dokter]: ${notes || "-"}`;
 
@@ -153,7 +194,7 @@ export default function DoctorDashboard() {
         body: JSON.stringify({
           appointmentId: selectedAppt.id,
           diagnosis,
-          prescription,
+          prescription: finalPrescriptionText,
           selectedProducts,
           notes: combinedNotes,
         })
@@ -305,6 +346,14 @@ export default function DoctorDashboard() {
                      </div>
 
                      <div className="flex flex-col shrink-0 gap-2 mt-4 md:mt-0">
+                       <Button 
+                         onClick={() => openPatientHistoryModal(appt.user.id)} 
+                         variant="outline" 
+                         size="sm"
+                         className="w-full md:w-auto text-xs text-blue-700 border-blue-200 hover:bg-blue-50 transition shadow-sm"
+                       >
+                         <History className="w-3.5 h-3.5 mr-1" /> Riwayat Berobat Pasien
+                       </Button>
                        {activeTab === "UPCOMING" ? (
                          <>
                            <Button onClick={() => openExamineDialog(appt)} className="w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
@@ -424,25 +473,67 @@ export default function DoctorDashboard() {
             {/* Section 3: Plan */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Pilih Obat dari Apotek (Inventory)</label>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <label className="text-sm font-semibold text-slate-700">Pilih Obat dari Apotek & Tentukan Dosis</label>
+                <div className="space-y-2 mb-2">
                   {selectedProducts.map(p => (
-                     <div key={p.id} className="flex items-center gap-2 bg-blue-50 border border-blue-200 p-1.5 rounded-md">
-                       <span className="text-sm text-blue-800 font-medium pl-1">{p.name}</span>
-                       <Input 
-                         type="number" min="1" 
-                         value={p.qty || 1} 
-                         onChange={(e) => {
-                           const val = parseInt(e.target.value) || 1;
-                           setSelectedProducts(prev => prev.map(x => x.id === p.id ? {...x, qty: val} : x));
-                         }}
-                         className="w-14 h-7 text-xs bg-white text-center p-1"
-                       />
-                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-600 hover:bg-red-100 rounded-sm" onClick={() => setSelectedProducts(prev => prev.filter(x => x.id !== p.id))}><X className="w-3 h-3" /></Button>
+                     <div key={p.id} className="p-2.5 bg-blue-50/70 border border-blue-200 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-2 shadow-sm">
+                       <div className="flex items-center gap-2 min-w-[140px]">
+                         <span className="text-xs font-bold text-blue-900">{p.name}</span>
+                       </div>
+                       
+                       <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                         {/* Jumlah */}
+                         <div className="flex items-center gap-1">
+                           <span className="text-xs text-slate-500">Jumlah:</span>
+                           <Input 
+                             type="number" min="1" 
+                             value={p.qty || 1} 
+                             onChange={(e) => {
+                               const val = parseInt(e.target.value) || 1;
+                               setSelectedProducts(prev => prev.map(x => x.id === p.id ? {...x, qty: val} : x));
+                             }}
+                             className="w-14 h-8 text-xs bg-white text-center p-1"
+                           />
+                         </div>
+
+                         {/* Satuan */}
+                         <select
+                           value={p.unit || "Strip"}
+                           onChange={(e) => {
+                             const u = e.target.value;
+                             setSelectedProducts(prev => prev.map(x => x.id === p.id ? {...x, unit: u} : x));
+                           }}
+                           className="h-8 text-xs border rounded bg-white px-1.5 text-slate-700"
+                         >
+                           <option value="Strip">Strip</option>
+                           <option value="Botol">Botol</option>
+                           <option value="Tablet">Tablet</option>
+                           <option value="Capsul">Capsul</option>
+                           <option value="Tube">Tube</option>
+                           <option value="Pcs">Pcs</option>
+                         </select>
+
+                         {/* Aturan Pakai / Dosis */}
+                         <Input 
+                           placeholder="Aturan: 3x1 sesudah makan"
+                           value={p.dosage || ""}
+                           onChange={(e) => {
+                             const d = e.target.value;
+                             setSelectedProducts(prev => prev.map(x => x.id === p.id ? {...x, dosage: d} : x));
+                           }}
+                           className="h-8 text-xs bg-white min-w-[180px] flex-1"
+                         />
+
+                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:bg-red-100 rounded-md" onClick={() => setSelectedProducts(prev => prev.filter(x => x.id !== p.id))}>
+                           <X className="w-4 h-4" />
+                         </Button>
+                       </div>
                      </div>
                   ))}
                   {selectedProducts.length === 0 && (
-                    <span className="text-sm text-muted-foreground italic text-muted-foreground/50">Belum ada obat yang dipilih</span>
+                    <div className="text-center py-4 border border-dashed rounded-lg text-xs text-muted-foreground bg-slate-50/50">
+                      Belum ada obat apotek yang dipilih. Silakan pilih dari dropdown di bawah.
+                    </div>
                   )}
                 </div>
                 <select 
@@ -450,13 +541,13 @@ export default function DoctorDashboard() {
                   onChange={(e) => {
                     const prod = products.find(p => p.id === e.target.value);
                     if(prod && !selectedProducts.find(x => x.id === prod.id)) {
-                      setSelectedProducts([...selectedProducts, { ...prod, qty: 1 }]);
+                      setSelectedProducts([...selectedProducts, { ...prod, qty: 1, unit: "Strip", dosage: "3x1 Sehari Sesudah Makan" }]);
                     }
                     e.target.value = ""; // reset
                   }}
                   value=""
                 >
-                  <option value="" disabled>-- Klik daftar ini untuk mencari & memilih obat --</option>
+                  <option value="" disabled>-- Klik untuk memilih obat dari inventory --</option>
                   {products.map(p => (
                     <option key={p.id} value={p.id} disabled={!p.inStock}>{p.name} {!p.inStock && "(Stok Habis)"}</option>
                   ))}
@@ -464,28 +555,34 @@ export default function DoctorDashboard() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Tindakan Medis & Obat Racikan Manual (Plan)</label>
+                <label className="text-sm font-semibold text-slate-700">Resep Obat Racikan / Non-Inventory (Opsional)</label>
                 <Textarea 
-                  placeholder="Catat tindakan yang dilakukan (misal: Suntik Vitamin C) atau resep obat yang tidak ada di inventory..." 
+                  placeholder="Catat resep obat racikan manual yang tidak ada di inventory (misal: Pulveres 10 bungkus)..." 
                   value={prescription} 
                   onChange={(e) => setPrescription(e.target.value)} 
-                  className="min-h-[100px] resize-none bg-background text-sm border-border/50"
+                  className="min-h-[90px] resize-none bg-background text-sm border-border/50"
                 />
               </div>
             </div>
 
-            {/* Section 4: Administration */}
-            <div className="grid md:grid-cols-2 gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10 items-center">
-               <div className="space-y-2">
-                 <label className="text-sm font-semibold text-primary/80">Keterangan Sakit</label>
-                 <div className="flex items-center gap-2">
-                   <Input type="number" min="0" max="14" value={sickLeave} onChange={(e) => setSickLeave(e.target.value)} className="h-10 w-24 bg-background shadow-sm" />
-                   <span className="text-sm text-muted-foreground font-medium">Hari</span>
-                 </div>
-               </div>
-               
-               <div className="flex items-center justify-end text-sm text-muted-foreground italic">
-                  *Apoteker/Admin akan menghitung total tagihan akhir pasien.
+            {/* Section 4: Surat Keterangan Istirahat Sakit */}
+            <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200/60 space-y-2">
+               <label className="text-sm font-semibold text-amber-900 flex items-center gap-2">
+                 <FileText className="w-4 h-4 text-amber-600" /> Surat Keterangan Istirahat Sakit (Medical Leave)
+               </label>
+               <p className="text-xs text-amber-800/80">
+                 Tentukan durasi istirahat yang diberikan kepada pasien (Isi <span className="font-semibold">0</span> jika tidak memerlukan surat sakit).
+               </p>
+               <div className="flex items-center gap-2 pt-1">
+                 <Input 
+                   type="number" 
+                   min="0" 
+                   max="30" 
+                   value={sickLeave} 
+                   onChange={(e) => setSickLeave(e.target.value)} 
+                   className="h-9 w-24 bg-white text-center font-bold text-amber-900 border-amber-300 shadow-sm" 
+                 />
+                 <span className="text-sm font-semibold text-amber-900">Hari Istirahat</span>
                </div>
             </div>
 
@@ -535,6 +632,81 @@ export default function DoctorDashboard() {
             <Button variant="ghost" onClick={() => setRescheduleOpen(false)}>Batal</Button>
             <Button onClick={submitRescheduleRequest} disabled={!rescheduleReason || rescheduleSubmitting}>
               {rescheduleSubmitting ? "Mengirim..." : "Kirim Permintaan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Patient Clinical History Modal for Doctor */}
+      <Dialog open={patientHistoryOpen} onOpenChange={setPatientHistoryOpen}>
+        <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 border-b pb-3 text-lg">
+              <History className="w-5 h-5 text-primary" />
+              Riwayat Rekam Medis Pasien
+            </DialogTitle>
+            <DialogDescription>
+              Daftar rekam medis klinis kunjungan terdahulu pasien <span className="font-semibold text-foreground">{patientHistoryData?.patient?.name}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          {historyLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : !patientHistoryData || patientHistoryData.records?.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <Stethoscope className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p>Belum ada riwayat rekam medis sebelumnya untuk pasien ini (Pasien Baru).</p>
+            </div>
+          ) : (
+            <div className="space-y-4 py-2">
+              {patientHistoryData.records.map((rec: any, idx: number) => (
+                <div key={rec.appointmentId || idx} className="p-4 bg-muted/30 rounded-xl border space-y-3">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span className="text-xs font-bold text-primary flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {format(new Date(rec.date), "dd MMMM yyyy")} ({timeSlotLabel(rec.timeSlot)})
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Dokter: {rec.doctorName}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-700 block">Diagnosa Medis:</span>
+                      <p className="text-foreground bg-background p-2.5 rounded border text-xs font-medium whitespace-pre-line">
+                        {rec.medicalRecord?.diagnosis || "-"}
+                      </p>
+                    </div>
+
+                    {rec.medicalRecord?.prescription && (
+                      <div>
+                        <span className="text-xs font-semibold text-emerald-700 block">Resep & Obat:</span>
+                        <p className="text-foreground bg-emerald-50/50 border border-emerald-100 p-2.5 rounded text-xs whitespace-pre-line font-medium">
+                          {formatPrescription(rec.medicalRecord.prescription)}
+                        </p>
+                      </div>
+                    )}
+
+                    {rec.medicalRecord?.notes && (
+                      <div>
+                        <span className="text-xs font-semibold text-muted-foreground block">Catatan Medis & Vital:</span>
+                        <p className="text-muted-foreground bg-background p-2.5 rounded border text-xs whitespace-pre-line">
+                          {rec.medicalRecord.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <DialogFooter className="pt-2 border-t">
+            <Button variant="outline" onClick={() => setPatientHistoryOpen(false)}>
+              Tutup
             </Button>
           </DialogFooter>
         </DialogContent>

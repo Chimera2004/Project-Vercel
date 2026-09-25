@@ -23,6 +23,10 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const statusFilter = searchParams.get("status") || "UPCOMING";
 
+  // Auto-expire past appointments that were not attended
+  const { autoExpirePastAppointments } = await import("@/lib/auto-expire-appointments");
+  await autoExpirePastAppointments();
+
   const appointments = await prisma.appointment.findMany({
     where: {
       doctorId: doctor.id,
@@ -31,6 +35,7 @@ export async function GET(req: Request) {
     include: {
       user: {
         select: {
+          id: true,
           name: true,
           email: true,
           phoneNumber: true,
