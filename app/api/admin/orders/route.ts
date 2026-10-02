@@ -15,7 +15,7 @@ export async function GET(req: Request) {
   try {
     const orders = await prisma.order.findMany({
       where: {
-        status: status,
+        status: status as any,
       },
       include: {
         user: { select: { name: true, phoneNumber: true, email: true } },

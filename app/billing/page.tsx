@@ -124,7 +124,7 @@ export default function BillingPage() {
       }
     } catch (e) {
       console.error(e);
-      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'error', title: 'Payment Error' });
+      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'error', title: 'Gagal Pembayaran' });
     } finally {
       setIsPaying(false);
     }
@@ -152,11 +152,11 @@ export default function BillingPage() {
         Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Pesanan Dibatalkan' });
       } else {
         const errorData = await res.json();
-        Swal.fire({ icon: 'error', title: 'Gagal Membatalkan', text: errorData.error || "Failed to cancel order" });
+        Swal.fire({ icon: 'error', title: 'Gagal Membatalkan', text: errorData.error || "Gagal membatalkan pesanan" });
       }
     } catch (e) {
       console.error(e);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'Internal error occurred.' });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.' });
     }
   };
 
@@ -221,7 +221,7 @@ export default function BillingPage() {
                       {pendingOrders.map(order => (
                         <div key={order.id} className="border border-amber-200 bg-amber-50/30 p-5 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
                            <div>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-200 mb-2">Awaiting Payment</Badge>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-200 mb-2">Menunggu Pembayaran</Badge>
                               <h3 className="font-semibold text-lg text-slate-800">
                                 {order.appointment ? "Biaya Konsultasi Dokter" : "Pembelian Obat Apotek"} #{order.id.slice(-6).toUpperCase()}
                               </h3>
@@ -298,7 +298,7 @@ export default function BillingPage() {
                        {paidOrders.length > itemsPerPage && (
                          <div className="flex items-center justify-between pt-2">
                             <p className="text-xs text-muted-foreground">
-                               Showing {Math.min(paidOrders.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(paidOrders.length, currentPage * itemsPerPage)} of {paidOrders.length} entries
+                               Menampilkan {Math.min(paidOrders.length, (currentPage - 1) * itemsPerPage + 1)} sampai {Math.min(paidOrders.length, currentPage * itemsPerPage)} dari {paidOrders.length} transaksi
                             </p>
                             <Pagination className="mx-0 w-auto">
                                <PaginationContent>

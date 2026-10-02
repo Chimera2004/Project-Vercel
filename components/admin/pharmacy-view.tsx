@@ -142,7 +142,7 @@ export function PharmacyView() {
           onClick={() => setActiveTab("UNBILLED")}
           className="flex items-center gap-2"
         >
-          <Pill className="w-4 h-4" /> Butuh Dihitung (Billed)
+          <Pill className="w-4 h-4" /> Butuh Penagihan
         </Button>
         <Button 
           variant={activeTab === "PENDING" ? "default" : "outline"} 
@@ -190,7 +190,7 @@ export function PharmacyView() {
                        <div>
                          <div className="flex items-center gap-2">
                            <h3 className="font-semibold text-lg">{appt.user.name}</h3>
-                           <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200">Pending Bill Compute</Badge>
+                           <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200">Belum Ditagih</Badge>
                          </div>
                          <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
                            <User className="w-3.5 h-3.5" /> Dokter: {appt.doctor.name} • {format(new Date(appt.date), "dd MMM yyyy")}
@@ -207,7 +207,7 @@ export function PharmacyView() {
                  {unbilledList.length > itemsPerPageUnbilled && (
                    <div className="flex items-center justify-between pt-2">
                      <p className="text-xs text-muted-foreground">
-                       Showing {Math.min(unbilledList.length, (currentPageUnbilled - 1) * itemsPerPageUnbilled + 1)} to {Math.min(unbilledList.length, currentPageUnbilled * itemsPerPageUnbilled)} of {unbilledList.length} entries
+                       Menampilkan {Math.min(unbilledList.length, (currentPageUnbilled - 1) * itemsPerPageUnbilled + 1)} hingga {Math.min(unbilledList.length, currentPageUnbilled * itemsPerPageUnbilled)} dari {unbilledList.length} data
                      </p>
                      <Pagination className="mx-0 w-auto">
                        <PaginationContent>
@@ -248,7 +248,7 @@ export function PharmacyView() {
                            <div className="flex items-center gap-2">
                              <h3 className="font-semibold text-lg">{order.user?.name || "Anonim"}</h3>
                              <Badge variant="outline" className={order.status === "PAID" ? "text-green-700 bg-green-50 border-green-200" : "text-blue-700 bg-blue-50 border-blue-200"}>
-                               {order.status === "PAID" ? "Sudah Lunas" : "Waiting Payment"}
+                               {order.status === "PAID" ? "Sudah Lunas" : "Menunggu Pembayaran"}
                              </Badge>
                            </div>
                            <p className="text-sm text-slate-500 mt-1">
@@ -273,7 +273,7 @@ export function PharmacyView() {
                  {orderList.length > itemsPerPageOrders && (
                    <div className="flex items-center justify-between pt-2">
                      <p className="text-xs text-muted-foreground">
-                       Showing {Math.min(orderList.length, (currentPageOrders - 1) * itemsPerPageOrders + 1)} to {Math.min(orderList.length, currentPageOrders * itemsPerPageOrders)} of {orderList.length} entries
+                       Menampilkan {Math.min(orderList.length, (currentPageOrders - 1) * itemsPerPageOrders + 1)} hingga {Math.min(orderList.length, currentPageOrders * itemsPerPageOrders)} dari {orderList.length} data
                      </p>
                      <Pagination className="mx-0 w-auto">
                        <PaginationContent>

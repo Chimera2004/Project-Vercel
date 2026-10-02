@@ -104,10 +104,21 @@ export function UsersView() {
       setShowEditDialog(false);
       setEditingUser(null);
       setEditFormData({});
-      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Profil Dokter diubah!' });
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        icon: "success",
+        title: "Profil Dokter diubah!",
+      });
     } catch (error) {
       console.error("Error updating user:", error);
-      Swal.fire({ icon: 'error', title: 'Error', text: "Gagal mengupdate profil dokter." });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Gagal mengupdate profil dokter.",
+      });
     }
   };
 
@@ -137,7 +148,11 @@ export function UsersView() {
 
   const handleAddAdmin = async () => {
     if (!newAdminData.name || !newAdminData.email || !newAdminData.phone) {
-      Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Tolong lengkapi semua bidang.' });
+      Swal.fire({
+        icon: "warning",
+        title: "Data Belum Lengkap",
+        text: "Tolong lengkapi semua bidang.",
+      });
       return;
     }
 
@@ -162,10 +177,21 @@ export function UsersView() {
         phone: "",
       });
 
-      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Dokter berhasil ditambahkan!' });
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        icon: "success",
+        title: "Dokter berhasil ditambahkan!",
+      });
     } catch (error) {
       console.error("Error adding new doctor:", error);
-      Swal.fire({ icon: 'error', title: 'Gagal', text: "Gagal menambahkan dokter baru. Silakan coba lagi." });
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal menambahkan dokter baru. Silakan coba lagi.",
+      });
     } finally {
       setAddingAdmin(false);
     }
@@ -173,13 +199,13 @@ export function UsersView() {
 
   const handleDelete = async (user: Doctor) => {
     const result = await Swal.fire({
-      title: 'Hapus Dokter?',
+      title: "Hapus Dokter?",
       text: `Anda yakin ingin menghapus data dokter ${user.name}?`,
-      icon: 'warning',
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Ya, Hapus!'
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Ya, Hapus!",
     });
     if (!result.isConfirmed) return;
 
@@ -191,12 +217,33 @@ export function UsersView() {
 
       if (!response.ok) throw new Error("Failed to delete user");
 
-      // Hapus user dari state supaya tabel update
-      setUsers(users.filter((u) => u.id !== user.id));
-      Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, icon: 'success', title: 'Dokter dihapus!' });
+      const resData = await response.json();
+
+      if (resData.isSoftDelete) {
+        fetchUsers();
+        Swal.fire({
+          icon: "info",
+          title: "Status Dokter Dinonaktifkan",
+          text: "Dokter ini memiliki riwayat pemeriksaan pasien. Akun dokter telah diubah menjadi Nonaktif agar riwayat berobat pasien tetap tersimpan di klinik.",
+        });
+      } else {
+        setUsers(users.filter((u) => u.id !== user.id));
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          icon: "success",
+          title: "Dokter berhasil dihapus!",
+        });
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
-      Swal.fire({ icon: 'error', title: 'Gagal', text: "Gagal menghapus dokter. Silakan coba lagi." });
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal memproses penghapusan dokter. Silakan coba lagi.",
+      });
     }
   };
 
@@ -204,9 +251,9 @@ export function UsersView() {
     <>
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Manajemen Dokter ({users.length} dokter)</CardTitle>
+          <CardTitle>Daftar Dokter ({users.length} dokter)</CardTitle>
           <Button onClick={() => setShowAddAdminDialog(true)} className="gap-2">
-            + Dokter
+            + Tambah Dokter
           </Button>
         </CardHeader>
         <CardContent>
@@ -215,73 +262,80 @@ export function UsersView() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/50">
-                    <th className="text-left py-2 px-4 font-medium">Name</th>
+                    <th className="text-left py-2 px-4 font-medium">Nama Dokter</th>
                     <th className="text-left py-2 px-4 font-medium">Email</th>
-                    <th className="text-left py-2 px-4 font-medium">Phone</th>
+                    <th className="text-left py-2 px-4 font-medium">No. Telepon</th>
                     <th className="text-left py-2 px-4 font-medium">Status</th>
-                    <th className="text-left py-2 px-4 font-medium">Joined</th>
-                    <th className="text-left py-2 px-4 font-medium">Actions</th>
+                    <th className="text-left py-2 px-4 font-medium">Terdaftar</th>
+                    <th className="text-left py-2 px-4 font-medium">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((user) => (
-                    <tr
-                      key={user.id}
-                      className="border-b border-border/50 hover:bg-muted/50"
-                    >
-                      <td className="py-3 px-4">{user.name}</td>
-                      <td className="py-3 px-4">{user.email}</td>
-                      <td className="py-3 px-4">{user.phone}</td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            user.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {user.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mr-2 bg-transparent"
-                          onClick={() => handleEditClick(user)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={`bg-transparent ${
-                            user.isActive ? "text-destructive" : "text-green-600"
-                          }`}
-                          onClick={() => handleDeactivate(user)}
-                        >
-                          {user.isActive ? "Deactivate" : "Activate"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="bg-transparent text-red-600 ml-2"
-                          onClick={() => handleDelete(user)}
-                        >
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {users
+                    .slice(
+                      (currentPage - 1) * itemsPerPage,
+                      currentPage * itemsPerPage
+                    )
+                    .map((user) => (
+                      <tr
+                        key={user.id}
+                        className="border-b border-border/50 hover:bg-muted/50"
+                      >
+                        <td className="py-3 px-4">{user.name}</td>
+                        <td className="py-3 px-4">{user.email}</td>
+                        <td className="py-3 px-4">{user.phone}</td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              user.isActive
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {user.isActive ? "Aktif" : "Nonaktif"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {new Date(user.createdAt).toLocaleDateString("id-ID")}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mr-2 bg-transparent"
+                            onClick={() => handleEditClick(user)}
+                          >
+                            Ubah
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={`bg-transparent ${
+                              user.isActive
+                                ? "text-destructive"
+                                : "text-green-600"
+                            }`}
+                            onClick={() => handleDeactivate(user)}
+                          >
+                            {user.isActive ? "Nonaktifkan" : "Aktifkan"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-transparent text-red-600 ml-2"
+                            onClick={() => handleDelete(user)}
+                          >
+                            Hapus
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
             {users.length === 0 && (
               <p className="text-center text-muted-foreground py-8">
-                No users found
+                Tidak ada data dokter
               </p>
             )}
 
@@ -289,20 +343,40 @@ export function UsersView() {
             {users.length > itemsPerPage && (
               <div className="flex items-center justify-between pt-4">
                 <p className="text-sm text-muted-foreground">
-                  Showing {Math.min(users.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(users.length, currentPage * itemsPerPage)} of {users.length} entries
+                  Menampilkan{" "}
+                  {Math.min(users.length, (currentPage - 1) * itemsPerPage + 1)}{" "}
+                  hingga {Math.min(users.length, currentPage * itemsPerPage)} dari{" "}
+                  {users.length} data
                 </p>
                 <Pagination className="mx-0 w-auto">
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      <PaginationPrevious
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(1, prev - 1))
+                        }
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
                     <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.length / itemsPerPage), prev + 1))}
-                        className={currentPage >= Math.ceil(users.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      <PaginationNext
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(
+                              Math.ceil(users.length / itemsPerPage),
+                              prev + 1
+                            )
+                          )
+                        }
+                        className={
+                          currentPage >= Math.ceil(users.length / itemsPerPage)
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -316,12 +390,12 @@ export function UsersView() {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Dokter</DialogTitle>
+            <DialogTitle>Ubah Data Dokter</DialogTitle>
           </DialogHeader>
           {editingUser && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Name</label>
+                <label className="text-sm font-medium">Nama Dokter</label>
                 <Input
                   value={editFormData.name || ""}
                   onChange={(e) =>
@@ -345,7 +419,7 @@ export function UsersView() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Phone</label>
+                <label className="text-sm font-medium">No. Telepon</label>
                 <Input
                   value={editFormData.phone || ""}
                   onChange={(e) =>
@@ -360,9 +434,9 @@ export function UsersView() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
+              Batal
             </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
+            <Button onClick={handleSaveEdit}>Simpan Perubahan</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -374,9 +448,9 @@ export function UsersView() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Name</label>
+              <label className="text-sm font-medium">Nama Dokter</label>
               <Input
-                placeholder="Enter full name"
+                placeholder="Masukkan nama lengkap dokter"
                 value={newAdminData.name}
                 onChange={(e) =>
                   setNewAdminData({
@@ -390,7 +464,7 @@ export function UsersView() {
               <label className="text-sm font-medium">Email</label>
               <Input
                 type="email"
-                placeholder="Enter email"
+                placeholder="Masukkan alamat email"
                 value={newAdminData.email}
                 onChange={(e) =>
                   setNewAdminData({
@@ -401,9 +475,9 @@ export function UsersView() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Phone</label>
+              <label className="text-sm font-medium">No. Telepon</label>
               <Input
-                placeholder="Enter phone number"
+                placeholder="Masukkan nomor telepon"
                 value={newAdminData.phone}
                 onChange={(e) =>
                   setNewAdminData({
@@ -420,7 +494,7 @@ export function UsersView() {
               onClick={() => setShowAddAdminDialog(false)}
               disabled={addingAdmin}
             >
-              Cancel
+              Batal
             </Button>
             <Button onClick={handleAddAdmin} disabled={addingAdmin}>
               {addingAdmin ? "Sedang menambahkan..." : "Tambah Dokter"}

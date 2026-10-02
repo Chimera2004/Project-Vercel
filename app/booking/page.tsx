@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, User, LogOut, Plus, History, X, CheckCircle, Video, MapPin, ExternalLink, ShoppingBag, Receipt, Trash2, FileText, Filter } from "lucide-react";
+import { Calendar, Clock, User, LogOut, Plus, History, X, CheckCircle, Video, MapPin, ExternalLink, ShoppingBag, Receipt, Trash2, FileText, Filter, Building } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -260,6 +260,16 @@ export default function BookingPage() {
     return map[slot] || slot;
   };
 
+  const appointmentTypeLabel = (type: string) => {
+    const map: Record<string, string> = {
+      "GENERAL_CHECKUP": "Pemeriksaan Umum",
+      "CONSULTATION": "Konsultasi Dokter",
+      "SPECIALIST": "Pemeriksaan Spesialis",
+      "MEDICAL_CHECK_UP": "Medical Check-Up",
+    };
+    return map[type] || type.replace(/_/g, " ");
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "CONFIRMED": return "bg-gray-100 text-gray-800 border-gray-200";
@@ -291,36 +301,36 @@ export default function BookingPage() {
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-foreground">MediCare Dashboard</h1>
-            <p className="text-muted-foreground">Manage your appointments</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/60 pb-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">MediCare</h1>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Kelola janji temu dan antrean pemeriksaan medis Anda</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={() => router.push("/billing")} className="flex items-center gap-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors">
-              <Receipt className="w-4 h-4" /> Billing
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+            <Button variant="outline" size="sm" onClick={() => router.push("/billing")} className="flex items-center gap-1.5 bg-indigo-50/80 border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm text-xs font-medium">
+              <Receipt className="w-3.5 h-3.5" /> Tagihan & Resep
             </Button>
-            <Button variant="outline" onClick={() => router.push("/store")} className="flex items-center gap-2 bg-transparent">
-              <ShoppingBag className="w-4 h-4" /> Store
+            <Button variant="outline" size="sm" onClick={() => router.push("/store")} className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border-slate-200 shadow-sm text-xs font-medium">
+              <ShoppingBag className="w-3.5 h-3.5 text-emerald-600" /> Apotek
             </Button>
-            <Button variant="outline" onClick={() => router.push("/user-profile")} className="flex items-center gap-2 bg-transparent">
-              <User className="w-4 h-4" /> My Profile
+            <Button variant="outline" size="sm" onClick={() => router.push("/user-profile")} className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border-slate-200 shadow-sm text-xs font-medium">
+              <User className="w-3.5 h-3.5 text-blue-600" /> Profil
             </Button>
-            <Button variant="outline" onClick={() => router.push("/profile")} className="flex items-center gap-2 bg-transparent">
-              <User className="w-4 h-4" /> Clinic Info
+            <Button variant="outline" size="sm" onClick={() => router.push("/profile")} className="flex items-center gap-1.5 bg-white hover:bg-slate-50 border-slate-200 shadow-sm text-xs font-medium">
+              <Building className="w-3.5 h-3.5 text-purple-600" /> Info Klinik
             </Button>
-            <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2 bg-transparent hover:text-red-500 hover:border-red-200">
-              <LogOut className="w-4 h-4" /> Exit
+            <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-700 hover:text-red-600 border-slate-200 hover:border-red-200 shadow-sm text-xs font-medium">
+              <LogOut className="w-3.5 h-3.5" /> Keluar
             </Button>
           </div>
         </div>
 
         <div className="flex gap-2">
           <Button variant={activeTab === "book" ? "default" : "outline"} onClick={() => setActiveTab("book")} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Book Appointment
+            <Plus className="w-4 h-4" /> Buat Janji Temu
           </Button>
           <Button variant={activeTab === "history" ? "default" : "outline"} onClick={() => setActiveTab("history")} className="flex items-center gap-2">
-            <History className="w-4 h-4" /> Booking History
+            <History className="w-4 h-4" /> Riwayat Janji Temu
           </Button>
         </div>
 
@@ -328,9 +338,9 @@ export default function BookingPage() {
           <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" /> Book New Appointment
+                <Calendar className="w-5 h-5 text-primary" /> Buat Janji Temu Baru
               </CardTitle>
-              <CardDescription>Schedule your next medical appointment</CardDescription>
+              <CardDescription>Atur jadwal konsultasi atau pemeriksaan kesehatan Anda</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <form onSubmit={handleBookAppointment} className="space-y-6">
@@ -338,94 +348,94 @@ export default function BookingPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Date *</label>
+                    <label className="text-sm font-medium">Pilih Tanggal *</label>
                     <input
                       type="date" required
                       min={(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()}
                       value={bookingForm.date} onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
                       className="w-full h-11 px-3 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50"
                     />
-                    <p className="text-xs text-muted-foreground">Booking must be made at least 1 day in advance.</p>
+                    <p className="text-xs text-muted-foreground">Pendaftaran janji temu dilakukan minimal H-1.</p>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Time *</label>
+                    <label className="text-sm font-medium">Pilih Waktu / Jam *</label>
                     <select
                       required value={bookingForm.timeSlot} onChange={(e) => setBookingForm({ ...bookingForm, timeSlot: e.target.value as any })}
                       className="w-full h-11 px-3 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50"
                     >
-                      <option value="">Choose time</option>
+                      <option value="">Pilih jam pemeriksaan</option>
                       {([
-                        { value: "NINE",   label: "9:00 AM" },
-                        { value: "TEN",    label: "10:00 AM" },
-                        { value: "ELEVEN", label: "11:00 AM" },
-                        { value: "TWO",    label: "2:00 PM" },
-                        { value: "THREE",  label: "3:00 PM" },
-                        { value: "FOUR",   label: "4:00 PM" },
+                        { value: "NINE",   label: "09:00 WIB" },
+                        { value: "TEN",    label: "10:00 WIB" },
+                        { value: "ELEVEN", label: "11:00 WIB" },
+                        { value: "TWO",    label: "14:00 WIB" },
+                        { value: "THREE",  label: "15:00 WIB" },
+                        { value: "FOUR",   label: "16:00 WIB" },
                       ] as const).map(({ value, label }) => {
                         const disabled = isSlotDisabled(bookingForm.date, value);
                         return (
                           <option key={value} value={value} disabled={disabled}>
-                            {label}{disabled ? " (Not Available)" : ""}
+                            {label}{disabled ? " (Tidak Tersedia)" : ""}
                           </option>
                         );
                       })}
                     </select>
                     {bookingForm.date && (
                       <p className="text-xs text-muted-foreground">
-                        All time slots are available for the selected date.
+                        Pilih jam yang sesuai dengan jadwal luang Anda.
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Doctor *</label>
+                    <label className="text-sm font-medium">Pilih Dokter *</label>
                     <select
                       required value={bookingForm.doctorId} onChange={(e) => setBookingForm({ ...bookingForm, doctorId: e.target.value })}
                       className="w-full h-11 px-3 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50"
                     >
-                      <option value="">Choose doctor</option>
+                      <option value="">Pilih dokter spesialis</option>
                       {doctors.map((doc) => <option key={doc.id} value={doc.id}>{doc.name}</option>)}
                     </select>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Appointment Type *</label>
+                    <label className="text-sm font-medium">Tipe Pemeriksaan *</label>
                     <select
                       required value={bookingForm.type} onChange={(e) => setBookingForm({ ...bookingForm, type: e.target.value as any })}
                       className="w-full h-11 px-3 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50"
                     >
-                      <option value="">Select type</option>
-                      <option value="GENERAL_CHECKUP">General Checkup</option>
-                      <option value="CONSULTATION">Consultation</option>
-                      <option value="FOLLOW_UP">Follow-up</option>
-                      <option value="EMERGENCY">Emergency</option>
+                      <option value="">Pilih tipe pemeriksaan</option>
+                      <option value="GENERAL_CHECKUP">Pemeriksaan Umum</option>
+                      <option value="CONSULTATION">Konsultasi Medis</option>
+                      <option value="FOLLOW_UP">Kunjungan Ulang / Kontrol</option>
+                      <option value="EMERGENCY">Darurat / UGD</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Meeting Type *</label>
+                  <label className="text-sm font-medium">Metode Pertemuan *</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button type="button" onClick={() => setBookingForm({ ...bookingForm, mode: "OFFLINE" })} className={`h-11 px-4 rounded-md border flex items-center justify-center gap-2 transition-colors ${bookingForm.mode === "OFFLINE" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-background/50 border-border/50 hover:bg-background"}`}>
-                      <MapPin className="w-4 h-4" /> In-Person Visit
+                      <MapPin className="w-4 h-4" /> Tatap Muka di Klinik
                     </button>
                     <button type="button" onClick={() => setBookingForm({ ...bookingForm, mode: "ONLINE" })} className={`h-11 px-4 rounded-md border flex items-center justify-center gap-2 transition-colors ${bookingForm.mode === "ONLINE" ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-background/50 border-border/50 hover:bg-background"}`}>
-                      <Video className="w-4 h-4" /> Online Video Call
+                      <Video className="w-4 h-4" /> Konsultasi Online (Video Call)
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Additional Notes (Optional)</label>
+                  <label className="text-sm font-medium">Catatan Tambahan / Keluhan (Opsional)</label>
                   <textarea
                     value={bookingForm.notes} onChange={(e) => setBookingForm({ ...bookingForm, notes: e.target.value })}
                     className="w-full h-24 px-3 py-2 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50 resize-none text-sm"
-                    placeholder="Any specific concerns or symptoms..."
+                    placeholder="Tuliskan keluhan atau gejala yang Anda rasakan..."
                   />
                 </div>
 
                 <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 flex items-center gap-2 shadow-sm font-medium">
-                  <CheckCircle className="w-4 h-4" /> Book Appointment
+                  <CheckCircle className="w-4 h-4" /> Konfirmasi & Buat Janji
                 </Button>
               </form>
             </CardContent>
@@ -543,10 +553,10 @@ export default function BookingPage() {
                                   {appointment.status === "WAITING_USER_CONFIRMATION" ? "Menunggu Konfirmasi Anda" : (appointment.status === "CONFIRMED" ? "Terkonfirmasi (Mendatang)" : (appointment.status === "CANCELLED" ? "Batal / Hangus" : appointment.status))}
                                 </Badge>
                                 <Badge variant="outline" className="flex items-center gap-1">
-                                  {appointment.mode === "ONLINE" ? <><Video className="w-3 h-3 text-blue-500" /> Online</> : <><MapPin className="w-3 h-3 text-green-600" /> In-Person</>}
+                                  {appointment.mode === "ONLINE" ? <><Video className="w-3 h-3 text-blue-500" /> Online</> : <><MapPin className="w-3 h-3 text-green-600" /> Tatap Muka</>}
                                 </Badge>
                               </div>
-                              <p className="text-xs text-muted-foreground capitalize font-medium">{appointment.type.replace("_", " ")}</p>
+                              <p className="text-xs text-muted-foreground font-medium">{appointmentTypeLabel(appointment.type)}</p>
                               <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                                 <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(appointment.date).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</span>
                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {timeSlotLabel(appointment.timeSlot)}</span>
@@ -579,7 +589,7 @@ export default function BookingPage() {
                                     if (displayNotes.startsWith("Jadwal dipindah")) {
                                       const match = displayNotes.match(/Dari:\s*(.+?)\n/);
                                       if (match) oldDateStr = match[1];
-                                      displayNotes = displayNotes.replace(/Jadwal dipindah:\nDari:.*?\nMenjadi:.*?(?:\n\n|$)/s, "").trim();
+                                      displayNotes = displayNotes.replace(/Jadwal dipindah:\nDari:[\s\S]*?\nMenjadi:[\s\S]*?(?:\n\n|$)/, "").trim();
                                     }
                                     return (
                                       <>

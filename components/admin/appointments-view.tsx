@@ -55,11 +55,11 @@ const TIME_SLOTS = [
 
 function statusLabel(s: string) {
   const map: Record<string, string> = {
-    PENDING: "Pending",
-    CONFIRMED: "Confirmed Pending",
-    COMPLETED: "Completed",
-    CANCELLED: "Cancelled",
-    WAITING_USER_CONFIRMATION: "Waiting User Confirmation",
+    PENDING: "Menunggu",
+    CONFIRMED: "Dikonfirmasi",
+    COMPLETED: "Selesai",
+    CANCELLED: "Dibatalkan",
+    WAITING_USER_CONFIRMATION: "Menunggu Konfirmasi Pasien",
   };
   return map[s] ?? s;
 }
@@ -225,7 +225,7 @@ export function AppointmentsView() {
   return (
     <Card className="bg-card/80 backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-4">
-        <CardTitle>Upcoming Appointments</CardTitle>
+        <CardTitle>Janji Temu Mendatang</CardTitle>
 
         <div className="flex items-center gap-2">
           <Button
@@ -233,28 +233,28 @@ export function AppointmentsView() {
             size="sm"
             onClick={() => setRange("today")}
           >
-            Today
+            Hari Ini
           </Button>
           <Button
             variant={range === "week" ? "default" : "outline"}
             size="sm"
             onClick={() => setRange("week")}
           >
-            This Week
+            Minggu Ini
           </Button>
           <Button
             variant={range === "month" ? "default" : "outline"}
             size="sm"
             onClick={() => setRange("month")}
           >
-            This Month
+            Bulan Ini
           </Button>
           <Button
             variant={range === "all" ? "default" : "outline"}
             size="sm"
             onClick={() => setRange("all")}
           >
-            All
+            Semua
           </Button>
         </div>
       </CardHeader>
@@ -266,7 +266,7 @@ export function AppointmentsView() {
             size="sm"
             onClick={() => setFilterType("ALL")}
           >
-            All Entries
+            Semua Data
           </Button>
           <Button
             variant={filterType === "NEED_ACTION" ? "destructive" : "outline"}
@@ -274,7 +274,7 @@ export function AppointmentsView() {
             onClick={() => setFilterType("NEED_ACTION")}
             className="relative"
           >
-            Requested Action
+            Perlu Tindakan
             {needsActionCount > 0 && (
               <span className="ml-2 flex items-center justify-center bg-white text-red-600 rounded-full h-5 w-5 text-xs font-bold shadow-sm">
                 {needsActionCount}
@@ -286,12 +286,12 @@ export function AppointmentsView() {
 
       <CardContent>
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">Memuat...</p>
         ) : error ? (
           <p className="text-sm text-muted-foreground">{error}</p>
         ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No appointments in this range.
+            Tidak ada janji temu dalam rentang ini.
           </p>
         ) : (
           <div className="space-y-4">
@@ -300,11 +300,11 @@ export function AppointmentsView() {
               <thead>
                 <tr className="border-b border-border/50">
                   <th className="text-left py-2 px-4 font-medium">Pasien</th>
-                  <th className="text-left py-2 px-4 font-medium">Doctor</th>
-                  <th className="text-left py-2 px-4 font-medium">Date</th>
-                  <th className="text-left py-2 px-4 font-medium">Time</th>
+                  <th className="text-left py-2 px-4 font-medium">Dokter</th>
+                  <th className="text-left py-2 px-4 font-medium">Tanggal</th>
+                  <th className="text-left py-2 px-4 font-medium">Waktu Slot</th>
                   <th className="text-left py-2 px-4 font-medium">Status</th>
-                  <th className="text-left py-2 px-4 font-medium">Actions</th>
+                  <th className="text-left py-2 px-4 font-medium">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -343,7 +343,7 @@ export function AppointmentsView() {
                                 ⏳ Menunggu Keputusan Pasien
                             </span>
                             <span className="p-1.5 bg-yellow-100 rounded-md text-yellow-800 break-words max-w-[200px]">
-                               Cek kolom Status
+                                Cek kolom Status
                             </span>
                           </div>
                         )}
@@ -375,7 +375,7 @@ export function AppointmentsView() {
                             }
                             onClick={() => openEditModal(apt)}
                           >
-                            Reschedule
+                            Ubah Jadwal
                           </Button>
                         </div>
                       </td>
@@ -391,7 +391,7 @@ export function AppointmentsView() {
           {rows.length > itemsPerPage && (
             <div className="flex items-center justify-between pt-4">
               <p className="text-sm text-muted-foreground">
-                Showing {Math.min(rows.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(rows.length, currentPage * itemsPerPage)} of {rows.length} entries
+                Menampilkan {Math.min(rows.length, (currentPage - 1) * itemsPerPage + 1)} hingga {Math.min(rows.length, currentPage * itemsPerPage)} dari {rows.length} data
               </p>
               <Pagination className="mx-0 w-auto">
                 <PaginationContent>
@@ -418,23 +418,23 @@ export function AppointmentsView() {
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Reschedule Appointment</DialogTitle>
+              <DialogTitle>Ubah Jadwal Janji Temu</DialogTitle>
             </DialogHeader>
 
             {editing && (
               <div className="space-y-4">
                 <div className="text-sm text-muted-foreground">
-                  Patient:{" "}
+                  Pasien:{" "}
                   <span className="text-foreground font-medium">
                     {editing.user?.name}
                   </span>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">Doctor</div>
+                  <div className="text-sm font-medium">Dokter</div>
                   <Select value={doctorId} onValueChange={setDoctorId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select doctor" />
+                      <SelectValue placeholder="Pilih dokter" />
                     </SelectTrigger>
                     <SelectContent>
                       {doctors.map((d) => (
@@ -447,7 +447,7 @@ export function AppointmentsView() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">Date</div>
+                  <div className="text-sm font-medium">Tanggal</div>
                   <Input
                     type="date"
                     value={dateValue}
@@ -456,10 +456,10 @@ export function AppointmentsView() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">Time</div>
+                  <div className="text-sm font-medium">Waktu Slot</div>
                   <Select value={timeSlot} onValueChange={setTimeSlot}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select time slot" />
+                      <SelectValue placeholder="Pilih slot waktu" />
                     </SelectTrigger>
                     <SelectContent>
                       {TIME_SLOTS.map((t) => (
@@ -479,7 +479,7 @@ export function AppointmentsView() {
                 onClick={() => setOpen(false)}
                 disabled={!!mutatingId}
               >
-                Close
+                Tutup
               </Button>
               <Button
                 onClick={submitReschedule}
@@ -491,7 +491,7 @@ export function AppointmentsView() {
                   !timeSlot
                 }
               >
-                {mutatingId ? "Saving..." : "Save"}
+                {mutatingId ? "Menyimpan..." : "Simpan"}
               </Button>
             </DialogFooter>
           </DialogContent>

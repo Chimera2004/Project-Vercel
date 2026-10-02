@@ -113,7 +113,7 @@ export function LoginForm() {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError("Please enter a valid email address.");
+      setEmailError("Harap masukkan alamat email yang valid.");
       return;
     }
 
@@ -126,7 +126,7 @@ export function LoginForm() {
       });
 
       if (!res?.ok) {
-        setError("Invalid email or password");
+        setError("Email atau kata sandi tidak valid");
         return;
       }
 
@@ -144,7 +144,7 @@ export function LoginForm() {
         router.push("/booking");
       }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError("Terjadi kesalahan. Silakan coba lagi.");
     }
   };
 
@@ -189,19 +189,19 @@ export function LoginForm() {
         </div>
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-foreground text-balance">
-            Welcome to MediCare
+            Selamat Datang di MediCare
           </h1>
           <p className="text-muted-foreground text-sm text-pretty">
-            Your trusted healthcare companion
+            Mitra Layanan Kesehatan Terpercaya Anda
           </p>
         </div>
       </div>
 
       <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-xl text-center">Sign In</CardTitle>
+          <CardTitle className="text-xl text-center">Masuk ke Akun</CardTitle>
           <CardDescription className="text-center text-pretty">
-            Access your health records and appointments
+            Akses rekam medis dan antrean janji temu Anda
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -214,12 +214,12 @@ export function LoginForm() {
 
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email Address
+                Alamat Email
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="doctor@example.com"
+                placeholder="pasien@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-11 bg-background/50 border-border/50 focus:bg-background focus:border-primary/50"
@@ -232,13 +232,13 @@ export function LoginForm() {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">
-                Password
+                Kata Sandi
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Masukkan kata sandi Anda"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-11 bg-background/50 border-border/50 focus:bg-background focus:border-primary/50 pr-10"
@@ -253,7 +253,7 @@ export function LoginForm() {
                 >
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                   <span className="sr-only">
-                    {showPassword ? "Hide password" : "Show password"}
+                    {showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                   </span>
                 </Button>
               </div>
@@ -263,7 +263,7 @@ export function LoginForm() {
               type="submit"
               className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
             >
-              Sign In
+              Masuk
             </Button>
           </form>
 
@@ -274,7 +274,7 @@ export function LoginForm() {
                 className="text-sm text-muted-foreground hover:text-primary p-0"
                 onClick={() => router.push("/forgot-password")}
               >
-                Forgot your password?
+                Lupa kata sandi Anda?
               </Button>
             </div>
 
@@ -284,7 +284,7 @@ export function LoginForm() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with
+                  Atau masuk dengan
                 </span>
               </div>
             </div>
@@ -312,18 +312,18 @@ export function LoginForm() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continue with Google
+              Lanjutkan dengan Google
             </Button>
           </div>
 
           <div className="text-center text-sm text-muted-foreground">
-            {"Don't have an account? "}
+            {"Belum memiliki akun? "}
             <Button
               variant="link"
               className="text-primary hover:text-primary/80 p-0 h-auto font-medium"
               onClick={() => router.push("/signup")}
             >
-              Sign up
+              Daftar Sekarang
             </Button>
           </div>
         </CardContent>
@@ -333,8 +333,8 @@ export function LoginForm() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md bg-white">
             <CardHeader className="text-center pb-4">
-              <CardTitle className="text-lg">Choose an account</CardTitle>
-              <CardDescription>to continue to MediCare</CardDescription>
+              <CardTitle className="text-lg">Pilih Akun</CardTitle>
+              <CardDescription>untuk melanjutkan ke MediCare</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {googleAccounts.map((account, index) => (
@@ -365,7 +365,7 @@ export function LoginForm() {
                   variant="ghost"
                   className="w-full h-auto p-4 justify-start hover:bg-gray-50"
                   onClick={() => {
-                    const customEmail = prompt("Enter your Google email:");
+                    const customEmail = prompt("Masukkan email Google Anda:");
                     if (customEmail) {
                       const customAccount = {
                         email: customEmail,
@@ -373,8 +373,8 @@ export function LoginForm() {
                         avatar: customEmail.charAt(0).toUpperCase(),
                         phone: "000-000-0000",
                         dateOfBirth: "1990-01-01",
-                        address: "Not provided",
-                        emergencyContact: "Not provided",
+                        address: "Belum diisi",
+                        emergencyContact: "Belum diisi",
                       };
                       handleGoogleAccountSelect(customAccount);
                     }
@@ -398,7 +398,7 @@ export function LoginForm() {
                     </div>
                     <div className="text-left">
                       <div className="font-medium text-gray-900">
-                        Use another account
+                        Gunakan akun lain
                       </div>
                     </div>
                   </div>
@@ -411,7 +411,7 @@ export function LoginForm() {
                   className="w-full text-gray-600 hover:bg-gray-50"
                   onClick={() => setShowGoogleAccounts(false)}
                 >
-                  Cancel
+                  Batal
                 </Button>
               </div>
             </CardContent>
@@ -420,19 +420,19 @@ export function LoginForm() {
       )}
 
       <div className="text-center text-xs text-muted-foreground space-y-1">
-        <p>Secure • HIPAA Compliant • Trusted by 10,000+ patients</p>
+        <p>Aman • Terenkripsi • Dipercaya oleh 10.000+ Pasien</p>
         <div className="flex justify-center gap-4">
           <Button
             variant="link"
             className="text-xs text-muted-foreground hover:text-primary p-0 h-auto"
           >
-            Privacy Policy
+            Kebijakan Privasi
           </Button>
           <Button
             variant="link"
             className="text-xs text-muted-foreground hover:text-primary p-0 h-auto"
           >
-            Terms of Service
+            Syarat & Ketentuan
           </Button>
         </div>
       </div>

@@ -152,7 +152,7 @@ export function PatientHistoryView() {
           {/* Period Filter Buttons */}
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase mr-1 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5" /> Filter Period:
+              <Filter className="w-3.5 h-3.5" /> Filter Periode:
             </span>
             <Button
               size="sm"
@@ -270,7 +270,7 @@ export function PatientHistoryView() {
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
-                            PENDING
+                            MENUNGGU
                           </Badge>
                         )}
                       </td>
@@ -331,7 +331,7 @@ export function PatientHistoryView() {
                   <div>
                     <span className="text-muted-foreground block text-xs">Status Pembayaran</span>
                     <Badge className={selectedItem.paymentStatus === "PAID" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
-                      {selectedItem.paymentStatus === "PAID" ? "LUNAS" : "PENDING"}
+                      {selectedItem.paymentStatus === "PAID" ? "LUNAS" : "MENUNGGU"}
                     </Badge>
                   </div>
                 </div>

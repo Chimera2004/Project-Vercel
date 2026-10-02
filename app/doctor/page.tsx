@@ -244,9 +244,9 @@ export default function DoctorDashboard() {
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
               <Stethoscope className="w-6 h-6 text-primary" />
-              Doctor Panel
+              Panel Dokter
             </h1>
-            <p className="text-muted-foreground">Manage your patients and examinations</p>
+            <p className="text-muted-foreground">Kelola pasien dan rekam medis pemeriksaan</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -314,13 +314,13 @@ export default function DoctorDashboard() {
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-medium">{appt.user.name}</h3>
                             <Badge className={getStatusColor(appt.status)}>
-                              {appt.status === "CONFIRMED" ? "Confirmed Pending" : appt.status}
+                              {appt.status === "CONFIRMED" ? "Dikonfirmasi" : appt.status}
                             </Badge>
                             <Badge variant="outline" className="flex items-center gap-1">
                               {appt.mode === "ONLINE" ? (
                                 <><Video className="w-3 h-3" /> Online</>
                               ) : (
-                                <><MapPin className="w-3 h-3" /> In-Person</>
+                                <><MapPin className="w-3 h-3" /> Tatap Muka</>
                               )}
                             </Badge>
                           </div>

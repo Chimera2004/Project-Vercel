@@ -147,14 +147,14 @@ export default function UserProfilePage() {
               className="flex items-center gap-2 bg-transparent"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              Kembali
             </Button>
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold text-foreground">
-                My Profile
+                Profil Saya
               </h1>
               <p className="text-muted-foreground">
-                Manage your personal information
+                Kelola informasi data diri dan kontak Anda
               </p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function UserProfilePage() {
             variant={isEditing ? "outline" : "default"}
           >
             <Edit3 className="w-4 h-4" />
-            {isEditing ? "Cancel" : "Edit Profile"}
+            {isEditing ? "Batal" : "Edit Profil"}
           </Button>
         </div>
 
@@ -174,13 +174,13 @@ export default function UserProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
-                Personal Information
+                Informasi Data Diri
               </CardTitle>
-              <CardDescription>Your basic personal details</CardDescription>
+              <CardDescription>Rincian data diri dasar Anda</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
+                <label className="text-sm font-medium">Nama Lengkap</label>
                 <input
                   type="text"
                   value={userInfo.name}
@@ -191,7 +191,7 @@ export default function UserProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Date of Birth</label>
+                <label className="text-sm font-medium">Tanggal Lahir</label>
                 <input
                   type="date"
                   value={userInfo.dateOfBirth}
@@ -210,13 +210,13 @@ export default function UserProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-primary" />
-                Contact Information
+                Informasi Kontak
               </CardTitle>
-              <CardDescription>How we can reach you</CardDescription>
+              <CardDescription>Kontak yang dapat dihubungi</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email Address</label>
+                <label className="text-sm font-medium">Alamat Email</label>
                 <input
                   type="email"
                   value={userInfo.email}
@@ -227,7 +227,7 @@ export default function UserProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Phone Number</label>
+                <label className="text-sm font-medium">Nomor HP / Telepon</label>
                 <input
                   type="tel"
                   value={userInfo.phoneNumber}
@@ -246,13 +246,13 @@ export default function UserProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-primary" />
-                Address Information
+                Informasi Alamat
               </CardTitle>
-              <CardDescription>Your current address</CardDescription>
+              <CardDescription>Alamat domisili Anda saat ini</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Street Address</label>
+                <label className="text-sm font-medium">Alamat Jalan</label>
                 <input
                   type="text"
                   value={userInfo.address}
@@ -264,7 +264,7 @@ export default function UserProfilePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">City</label>
+                  <label className="text-sm font-medium">Kota / Kabupaten</label>
                   <input
                     type="text"
                     value={userInfo.city}
@@ -274,7 +274,7 @@ export default function UserProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">State</label>
+                  <label className="text-sm font-medium">Provinsi</label>
                   <input
                     type="text"
                     value={userInfo.state}
@@ -284,7 +284,7 @@ export default function UserProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">ZIP Code</label>
+                  <label className="text-sm font-medium">Kode Pos</label>
                   <input
                     type="text"
                     value={userInfo.zipCode}
@@ -304,16 +304,16 @@ export default function UserProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Phone className="w-5 h-5 text-primary" />
-                Emergency Contact
+                Kontak Darurat
               </CardTitle>
               <CardDescription>
-                Person to contact in case of emergency
+                Kerabat / keluarga yang dapat dihubungi dalam kondisi darurat
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Contact Name</label>
+                  <label className="text-sm font-medium">Nama Kontak Darurat</label>
                   <input
                     type="text"
                     value={userInfo.emergencyContact}
@@ -325,7 +325,7 @@ export default function UserProfilePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Contact Phone</label>
+                  <label className="text-sm font-medium">Nomor Telepon Kontak Darurat</label>
                   <input
                     type="tel"
                     value={userInfo.emergencyPhone}
@@ -345,14 +345,14 @@ export default function UserProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" />
-                Medical History
+                Riwayat Kesehatan
               </CardTitle>
-              <CardDescription>Important medical information</CardDescription>
+              <CardDescription>Informasi riwayat medis penting</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Medical History & Notes
+                  Catatan Riwayat Penyakit & Alergi
                 </label>
                 <textarea
                   value={userInfo.medicalHistory}
@@ -360,8 +360,8 @@ export default function UserProfilePage() {
                     handleInputChange("medicalHistory", e.target.value)
                   }
                   disabled={!isEditing}
-                  className="w-full h-24 px-3 py-2 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50 resize-none disabled:opacity-60"
-                  placeholder="Allergies, previous surgeries, medications, etc."
+                  className="w-full h-24 px-3 py-2 rounded-md border border-border/50 bg-background/50 focus:bg-background focus:border-primary/50 resize-none disabled:opacity-60 text-sm"
+                  placeholder="Alergi obat/makanan, riwayat operasi, konsumsi obat rutin, dll."
                 />
               </div>
             </CardContent>
@@ -378,12 +378,12 @@ export default function UserProfilePage() {
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
+                    Menyimpan...
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Save Changes
+                    Simpan Perubahan
                   </>
                 )}
               </Button>

@@ -259,10 +259,10 @@ export function InventoryView() {
 
   const formatCategory = (cat: string) => {
     const map: Record<string, string> = {
-      MEDICAL_DEVICE: "Medical Device",
-      SUPPLEMENT: "Supplement",
-      PRESCRIPTION: "Prescription",
-      MEDICAL_SUPPLY: "Medical Supply",
+      MEDICAL_DEVICE: "Alat Kesehatan",
+      SUPPLEMENT: "Suplemen & Vitamin",
+      PRESCRIPTION: "Obat Resep",
+      MEDICAL_SUPPLY: "Perlengkapan Medis",
     };
 
     return map[cat] ?? cat;
@@ -336,11 +336,11 @@ export function InventoryView() {
         <Card className="bg-yellow-50 border-yellow-200">
           <CardHeader className="flex flex-row items-center gap-2 pb-3">
             <AlertCircle className="h-5 w-5 text-yellow-600" />
-            <CardTitle className="text-yellow-900">Low Stock Alert</CardTitle>
+            <CardTitle className="text-yellow-900">Peringatan Stok Obat</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-yellow-800">
-              {lowStockItems.length} item(s) below reorder level:{" "}
+              {lowStockItems.length} obat berada di bawah batas minimum stok:{" "}
               {lowStockItems.map((i) => i.item_name).join(", ")}
             </p>
           </CardContent>
@@ -351,7 +351,7 @@ export function InventoryView() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Items</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Jenis Obat</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{inventory.length}</div>
@@ -359,24 +359,24 @@ export function InventoryView() {
         </Card>
         <Card className="bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Nilai Stok</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rp.
+              Rp{" "}
               {inventory
                 .reduce(
                   (sum, item) => sum + item.quantity * (item.unit_price || 0),
                   0
                 )
-                .toFixed(2)}
+                .toLocaleString("id-ID")}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Low Stock Items
+              Obat Stok Menipis
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -387,8 +387,6 @@ export function InventoryView() {
         </Card>
       </div>
 
-      {/* Add New Item Form (Moved to Dialog at bottom) */}
-
       {!showAddForm && (
         <div className="flex gap-2 flex-wrap">
           <Button
@@ -396,7 +394,7 @@ export function InventoryView() {
             className="bg-primary hover:bg-primary/90"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add New Item
+            Tambah Obat Baru
           </Button>
 
           <Button
@@ -408,7 +406,7 @@ export function InventoryView() {
             <RefreshCw
               className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
             />
-            {isRefreshing ? "Refreshing..." : "Refresh"}
+            {isRefreshing ? "Memperbarui..." : "Perbarui"}
           </Button>
         </div>
       )}
@@ -416,10 +414,9 @@ export function InventoryView() {
       {/* Inventory Table */}
       <Card className="bg-card/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
+          <CardTitle>Stok & Inventaris Obat</CardTitle>
           <p className="text-xs text-muted-foreground mt-2">
-            Real-time stock tracking: Items automatically decrease when
-            customers place orders
+            Pemantauan stok langsung: Stok berkurang otomatis saat terjadi pembelian oleh pasien
           </p>
         </CardHeader>
         <CardContent>
@@ -428,21 +425,21 @@ export function InventoryView() {
               <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/50">
-                  <th className="text-left py-2 px-4 font-medium">Item Name</th>
-                  <th className="text-left py-2 px-4 font-medium">Category</th>
-                  <th className="text-left py-2 px-4 font-medium">Quantity</th>
+                  <th className="text-left py-2 px-4 font-medium">Nama Obat</th>
+                  <th className="text-left py-2 px-4 font-medium">Kategori</th>
+                  <th className="text-left py-2 px-4 font-medium">Jumlah Stok</th>
                   <th className="text-left py-2 px-4 font-medium">
-                    Reorder Level
+                    Batas Minimal
                   </th>
                   <th className="text-left py-2 px-4 font-medium">
-                    Unit Price
+                    Harga Satuan
                   </th>
-                  <th className="text-left py-2 px-4 font-medium">Supplier</th>
+                  <th className="text-left py-2 px-4 font-medium">Pemasok</th>
                   <th className="text-left py-2 px-4 font-medium">
-                    Description
+                    Deskripsi
                   </th>
-                  <th className="text-left py-2 px-4 font-medium">Image</th>
-                  <th className="text-left py-2 px-4 font-medium">Actions</th>
+                  <th className="text-left py-2 px-4 font-medium">Gambar</th>
+                  <th className="text-left py-2 px-4 font-medium">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -470,7 +467,7 @@ export function InventoryView() {
                         </td>
                         <td className="py-3 px-4">{item.reorder_level}</td>
                         <td className="py-3 px-4">
-                          Rp. {(item.unit_price || 0).toFixed(2)}
+                          Rp {(item.unit_price || 0).toLocaleString("id-ID")}
                         </td>
                         <td className="py-3 px-4">{item.supplier ?? "-"}</td>
                         <td
@@ -520,7 +517,7 @@ export function InventoryView() {
           {inventory.length > itemsPerPage && (
             <div className="flex items-center justify-between pt-4">
               <p className="text-sm text-muted-foreground">
-                Showing {Math.min(inventory.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(inventory.length, currentPage * itemsPerPage)} of {inventory.length} entries
+                Menampilkan {Math.min(inventory.length, (currentPage - 1) * itemsPerPage + 1)} hingga {Math.min(inventory.length, currentPage * itemsPerPage)} dari {inventory.length} data
               </p>
               <Pagination className="mx-0 w-auto">
                 <PaginationContent>
@@ -548,54 +545,54 @@ export function InventoryView() {
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Add New Item</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Tambah Obat Baru</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Item Name</label>
+                <label className="text-sm font-medium mb-1 block">Nama Obat</label>
                 <Input value={newItem.item_name || ""} onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Category</label>
+                <label className="text-sm font-medium mb-1 block">Kategori</label>
                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={newItem.category || ""} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}>
-                  <option value="">Select Category</option>
-                  <option value="MEDICAL_DEVICE">Medical Device</option>
-                  <option value="SUPPLEMENT">Supplement</option>
-                  <option value="PRESCRIPTION">Prescription</option>
-                  <option value="MEDICAL_SUPPLY">Medical Supply</option>
+                  <option value="">Pilih Kategori</option>
+                  <option value="MEDICAL_DEVICE">Alat Kesehatan</option>
+                  <option value="SUPPLEMENT">Suplemen & Vitamin</option>
+                  <option value="PRESCRIPTION">Obat Resep</option>
+                  <option value="MEDICAL_SUPPLY">Perlengkapan Medis</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Quantity</label>
+                  <label className="text-sm font-medium mb-1 block">Jumlah Stok</label>
                   <Input type="number" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number.parseInt(e.target.value) || 0 })} />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Reorder Level</label>
+                  <label className="text-sm font-medium mb-1 block">Batas Minimal</label>
                   <Input type="number" value={newItem.reorder_level || ""} onChange={(e) => setNewItem({ ...newItem, reorder_level: Number.parseInt(e.target.value) || 0 })} />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Unit Price (Rp)</label>
+                <label className="text-sm font-medium mb-1 block">Harga Satuan (Rp)</label>
                 <Input type="number" value={newItem.unit_price || ""} onChange={(e) => setNewItem({ ...newItem, unit_price: Number.parseFloat(e.target.value) || 0 })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Supplier</label>
+                <label className="text-sm font-medium mb-1 block">Pemasok</label>
                 <Input value={newItem.supplier || ""} onChange={(e) => setNewItem({ ...newItem, supplier: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Description</label>
+                <label className="text-sm font-medium mb-1 block">Deskripsi</label>
                 <Textarea className="resize-none min-h-[80px]" value={newItem.description || ""} onChange={(e) => setNewItem({ ...newItem, description: e.target.value })} />
               </div>
             </div>
             
             <div className="space-y-4 flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-muted/20">
-              <span className="text-sm font-medium mb-2 text-muted-foreground w-full text-center">Product Image Preview</span>
+              <span className="text-sm font-medium mb-2 text-muted-foreground w-full text-center">Pratinjau Gambar Obat</span>
               {addPreview ? (
                 <img src={addPreview} alt="Preview" className="max-w-[200px] h-auto object-cover rounded shadow border" />
               ) : (
-                <div className="w-48 h-48 bg-muted flex items-center justify-center rounded border text-muted-foreground">No image</div>
+                <div className="w-48 h-48 bg-muted flex items-center justify-center rounded border text-muted-foreground">Tanpa Gambar</div>
               )}
               <div className="w-full">
                 <Input type="file" accept="image/*" onChange={(e) => {
@@ -607,8 +604,8 @@ export function InventoryView() {
             </div>
           </div>
           <DialogFooter className="mt-6 border-t pt-4">
-            <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
-            <Button onClick={handleAddItem} className="bg-primary">Save Item</Button>
+            <Button variant="outline" onClick={() => setShowAddForm(false)}>Batal</Button>
+            <Button onClick={handleAddItem} className="bg-primary">Simpan Obat</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -624,49 +621,49 @@ export function InventoryView() {
       }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Edit Item</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Ubah Data Obat</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Item Name</label>
+                <label className="text-sm font-medium mb-1 block">Nama Obat</label>
                 <Input value={editValues.item_name || ""} onChange={(e) => setEditValues({ ...editValues, item_name: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Category</label>
+                <label className="text-sm font-medium mb-1 block">Kategori</label>
                 <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={editValues.category || ""} onChange={(e) => setEditValues({ ...editValues, category: e.target.value })}>
-                  <option value="MEDICAL_DEVICE">Medical Device</option>
-                  <option value="SUPPLEMENT">Supplement</option>
-                  <option value="PRESCRIPTION">Prescription</option>
-                  <option value="MEDICAL_SUPPLY">Medical Supply</option>
+                  <option value="MEDICAL_DEVICE">Alat Kesehatan</option>
+                  <option value="SUPPLEMENT">Suplemen & Vitamin</option>
+                  <option value="PRESCRIPTION">Obat Resep</option>
+                  <option value="MEDICAL_SUPPLY">Perlengkapan Medis</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Quantity</label>
+                  <label className="text-sm font-medium mb-1 block">Jumlah Stok</label>
                   <Input type="number" value={editValues.quantity || ""} onChange={(e) => setEditValues({ ...editValues, quantity: Number.parseInt(e.target.value) || 0 })} />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Reorder Level</label>
+                  <label className="text-sm font-medium mb-1 block">Batas Minimal</label>
                   <Input type="number" value={editValues.reorder_level || ""} onChange={(e) => setEditValues({ ...editValues, reorder_level: Number.parseInt(e.target.value) || 0 })} />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Unit Price (Rp)</label>
+                <label className="text-sm font-medium mb-1 block">Harga Satuan (Rp)</label>
                 <Input type="number" value={editValues.unit_price || ""} onChange={(e) => setEditValues({ ...editValues, unit_price: Number.parseFloat(e.target.value) || 0 })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Supplier</label>
+                <label className="text-sm font-medium mb-1 block">Pemasok</label>
                 <Input value={editValues.supplier || ""} onChange={(e) => setEditValues({ ...editValues, supplier: e.target.value })} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Description</label>
+                <label className="text-sm font-medium mb-1 block">Deskripsi</label>
                 <Textarea className="resize-none min-h-[80px]" value={editValues.description || ""} onChange={(e) => setEditValues({ ...editValues, description: e.target.value })} />
               </div>
             </div>
             
             <div className="space-y-4 flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-muted/20">
-              <span className="text-sm font-medium mb-2 text-muted-foreground w-full text-center">Product Image Preview</span>
+              <span className="text-sm font-medium mb-2 text-muted-foreground w-full text-center">Pratinjau Gambar Obat</span>
               <img
                 src={imagePreview || (editingId ? `${getProductImage(editValues.item_name || "")}?v=${imgBust[editingId] ?? 0}` : "/store/default.png")}
                 onError={(e) => {
@@ -688,8 +685,8 @@ export function InventoryView() {
             </div>
           </div>
           <DialogFooter className="mt-6 border-t pt-4">
-            <Button variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
-            <Button onClick={() => editingId && handleSaveEdit(editingId)} className="bg-primary">Save Changes</Button>
+            <Button variant="outline" onClick={() => setEditingId(null)}>Batal</Button>
+            <Button onClick={() => editingId && handleSaveEdit(editingId)} className="bg-primary">Simpan Perubahan</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

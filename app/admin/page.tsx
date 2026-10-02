@@ -11,6 +11,18 @@ import { PharmacyView } from "@/components/admin/pharmacy-view";
 import { PatientHistoryView } from "@/components/admin/patient-history-view";
 import BookingPage from "@/app/booking/page";
 import StorePage from "@/app/store/page";
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  Users, 
+  Package, 
+  Pill, 
+  FileText, 
+  User, 
+  LogOut, 
+  ShoppingBag, 
+  ArrowLeft 
+} from "lucide-react";
 
 type AdminView = "dashboard" | "appointments" | "users" | "inventory" | "pharmacy" | "patient-history";
 
@@ -30,14 +42,14 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-background">
         <header className="flex items-center justify-between p-6 border-b border-border/50 bg-card/80 backdrop-blur-sm">
-          <h1 className="text-2xl font-bold text-foreground">Clinic Store</h1>
+          <h1 className="text-2xl font-bold text-foreground">Toko Obat Klinik</h1>
           <Button
             onClick={() => setViewingAsUser(false)}
             variant="outline"
             className="gap-2"
           >
-            <span>👨‍💼</span>
-            Back to Admin
+            <ArrowLeft className="w-4 h-4" />
+            Kembali ke Panel Admin
           </Button>
         </header>
 
@@ -47,16 +59,16 @@ export default function AdminPage() {
             onClick={() => setUserViewTab("store")}
             className="gap-2"
           >
-            <span>🛍️</span>
-            Store
+            <ShoppingBag className="w-4 h-4" />
+            Toko Obat
           </Button>
           <Button
             variant={userViewTab === "booking" ? "default" : "outline"}
             onClick={() => setUserViewTab("booking")}
             className="gap-2"
           >
-            <span>📅</span>
-            Booking
+            <Calendar className="w-4 h-4" />
+            Janji Temu
           </Button>
         </div>
 
@@ -91,107 +103,69 @@ export default function AdminPage() {
             size="icon"
             className={`w-12 h-12 rounded-lg ${
               currentView === "dashboard"
-                ? "bg-primary/10"
-                : "hover:bg-primary/10"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
             }`}
             onClick={() => setCurrentView("dashboard")}
-            title="Dashboard"
+            title="Dasbor"
           >
-            <span
-              className={`text-lg ${
-                currentView === "dashboard"
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              📊
-            </span>
-            <span className="sr-only">Dashboard</span>
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="sr-only">Dasbor</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className={`w-12 h-12 rounded-lg ${
               currentView === "appointments"
-                ? "bg-primary/10"
-                : "hover:bg-primary/10"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
             }`}
             onClick={() => setCurrentView("appointments")}
-            title="Appointments"
+            title="Janji Temu"
           >
-            <span
-              className={`text-lg ${
-                currentView === "appointments"
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              📅
-            </span>
-            <span className="sr-only">Appointments</span>
+            <Calendar className="w-5 h-5" />
+            <span className="sr-only">Janji Temu</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className={`w-12 h-12 rounded-lg ${
-              currentView === "users" ? "bg-primary/10" : "hover:bg-primary/10"
+              currentView === "users" 
+                ? "bg-primary/10 text-primary" 
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
             }`}
             onClick={() => setCurrentView("users")}
-            title="Users"
+            title="Manajemen Dokter"
           >
-            <span
-              className={`text-lg ${
-                currentView === "users"
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              👥
-            </span>
-            <span className="sr-only">Users</span>
+            <Users className="w-5 h-5" />
+            <span className="sr-only">Manajemen Dokter</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className={`w-12 h-12 rounded-lg ${
               currentView === "inventory"
-                ? "bg-primary/10"
-                : "hover:bg-primary/10"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
             }`}
-             onClick={() => setCurrentView("inventory")}
-            title="Inventory"
+            onClick={() => setCurrentView("inventory")}
+            title="Stok & Inventaris"
           >
-            <span
-              className={`text-lg ${
-                currentView === "inventory"
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              📦
-            </span>
-            <span className="sr-only">Inventory</span>
+            <Package className="w-5 h-5" />
+            <span className="sr-only">Stok & Inventaris</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className={`w-12 h-12 rounded-lg ${
               currentView === "pharmacy"
-                ? "bg-primary/10"
-                : "hover:bg-primary/10"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
             }`}
-             onClick={() => setCurrentView("pharmacy")}
+            onClick={() => setCurrentView("pharmacy")}
             title="Apotek & Kasir"
           >
-            <span
-              className={`text-lg ${
-                currentView === "pharmacy"
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              💊
-            </span>
+            <Pill className="w-5 h-5" />
             <span className="sr-only">Apotek & Kasir</span>
           </Button>
           <Button
@@ -199,21 +173,13 @@ export default function AdminPage() {
             size="icon"
             className={`w-12 h-12 rounded-lg ${
               currentView === "patient-history"
-                ? "bg-primary/10"
-                : "hover:bg-primary/10"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
             }`}
-             onClick={() => setCurrentView("patient-history")}
+            onClick={() => setCurrentView("patient-history")}
             title="Riwayat Pasien"
           >
-            <span
-              className={`text-lg ${
-                currentView === "patient-history"
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              📜
-            </span>
+            <FileText className="w-5 h-5" />
             <span className="sr-only">Riwayat Pasien</span>
           </Button>
         </nav>
@@ -221,25 +187,22 @@ export default function AdminPage() {
         <Button
           variant="ghost"
           size="icon"
-          className="w-12 h-12 rounded-lg hover:bg-blue-500/10"
+          className="w-12 h-12 rounded-lg text-muted-foreground hover:bg-blue-500/10 hover:text-blue-500"
           onClick={() => setViewingAsUser(true)}
-          title="View as User"
+          title="Lihat Sebagai Pasien"
         >
-          <span className="text-lg text-muted-foreground hover:text-blue-500">
-            👤
-          </span>
-          <span className="sr-only">View as User</span>
+          <User className="w-5 h-5" />
+          <span className="sr-only">Lihat Sebagai Pasien</span>
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="w-12 h-12 rounded-lg hover:bg-destructive/10"
+          className="w-12 h-12 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           onClick={handleLogout}
+          title="Keluar"
         >
-          <span className="text-lg text-muted-foreground hover:text-destructive">
-            🚪
-          </span>
-          <span className="sr-only">Logout</span>
+          <LogOut className="w-5 h-5" />
+          <span className="sr-only">Keluar</span>
         </Button>
       </aside>
 
@@ -247,15 +210,15 @@ export default function AdminPage() {
       <main className="flex-1 p-8">
         <header className="flex items-center justify-between pb-6 mb-8 border-b border-border/50">
           <h1 className="text-3xl font-bold text-foreground">
-            {currentView === "dashboard" && "Admin Dashboard"}
-            {currentView === "appointments" && "Appointments"}
-            {currentView === "users" && "Users"}
-            {currentView === "inventory" && "Inventory Management"}
+            {currentView === "dashboard" && "Dasbor Admin"}
+            {currentView === "appointments" && "Janji Temu & Konsultasi"}
+            {currentView === "users" && "Manajemen Dokter"}
+            {currentView === "inventory" && "Stok & Inventaris Obat"}
             {currentView === "pharmacy" && "Apotek & Kasir"}
             {currentView === "patient-history" && "Riwayat Kunjungan Pasien"}
           </h1>
           <div className="flex items-center gap-4">
-            <span className="text-muted-foreground">Welcome, Admin!</span>
+            <span className="text-muted-foreground">Selamat datang, Admin!</span>
           </div>
         </header>
 

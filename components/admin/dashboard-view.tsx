@@ -61,15 +61,15 @@ export function DashboardView() {
     <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
       <Card className="bg-card/80 backdrop-blur-sm shadow-sm border-0 border-l-4 border-l-indigo-500">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Pasien</CardTitle>
           <Users className="h-4 w-4 text-indigo-500" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {loading ? "..." : (data?.totalPatients ?? 0).toLocaleString("en-US")}
+            {loading ? "..." : (data?.totalPatients ?? 0).toLocaleString("id-ID")}
           </div>
           <p className="text-xs text-muted-foreground">
-            {error ? error : "Live data from database"}
+            {error ? error : "Data terkini dari sistem"}
           </p>
         </CardContent>
       </Card>
@@ -77,7 +77,7 @@ export function DashboardView() {
       <Card className="bg-card/80 backdrop-blur-sm shadow-sm border-0 border-l-4 border-l-violet-500">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">
-            Appointments Today
+            Janji Temu Hari Ini
           </CardTitle>
           <Calendar className="h-4 w-4 text-violet-500" />
         </CardHeader>
@@ -86,14 +86,14 @@ export function DashboardView() {
             {loading ? "..." : data?.appointmentsToday ?? 0}
           </div>
           <p className="text-xs text-muted-foreground">
-            {error ? "—" : "Count for today"}
+            {error ? "—" : "Jumlah janji hari ini"}
           </p>
         </CardContent>
       </Card>
 
       <Card className="bg-card/80 backdrop-blur-sm shadow-sm border-0 border-l-4 border-l-blue-500">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">New Registrations</CardTitle>
+          <CardTitle className="text-sm font-medium">Pendaftaran Baru</CardTitle>
           <Home className="h-4 w-4 text-blue-500" />
         </CardHeader>
         <CardContent>
@@ -101,14 +101,14 @@ export function DashboardView() {
             {loading ? "..." : data?.newRegistrations ?? 0}
           </div>
           <p className="text-xs text-muted-foreground">
-            {error ? "—" : "This week (Mon–Today)"}
+            {error ? "—" : "Minggu ini (Senin–Hari ini)"}
           </p>
         </CardContent>
       </Card>
 
       <Card className="bg-card/80 backdrop-blur-sm shadow-sm border-0 border-l-4 border-l-emerald-500">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
           <DollarSign className="h-4 w-4 text-emerald-500" />
         </CardHeader>
         <CardContent>
@@ -123,7 +123,7 @@ export function DashboardView() {
 
       <Card className="bg-card/80 backdrop-blur-sm shadow-sm border-0 border-l-4 border-l-amber-500">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Stock Alerts</CardTitle>
+          <CardTitle className="text-sm font-medium">Peringatan Stok Obat</CardTitle>
           <AlertTriangle className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
@@ -131,7 +131,7 @@ export function DashboardView() {
             {loading ? "..." : data?.lowStockCount ?? 0}
           </div>
           <p className="text-xs text-muted-foreground">
-            {error ? "—" : "Items with quantity < 10"}
+            {error ? "—" : "Obat dengan stok < 10"}
           </p>
         </CardContent>
       </Card>
@@ -139,13 +139,13 @@ export function DashboardView() {
       <Card className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-5 bg-card/80 backdrop-blur-sm shadow-lg border-0">
         <CardHeader className="flex flex-row items-center justify-between gap-4">
           <div>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Aktivitas Terkini</CardTitle>
             <p className="text-sm text-muted-foreground">
               {activityRange === "today"
-                ? "Today"
+                ? "Hari Ini"
                 : activityRange === "week"
-                ? "This week"
-                : "This month"}
+                ? "Minggu Ini"
+                : "Bulan Ini"}
             </p>
           </div>
 
@@ -156,7 +156,7 @@ export function DashboardView() {
               onClick={() => setActivityRange("today")}
               disabled={loading}
             >
-              Today
+              Hari Ini
             </Button>
             <Button
               size="sm"
@@ -164,7 +164,7 @@ export function DashboardView() {
               onClick={() => setActivityRange("week")}
               disabled={loading}
             >
-              Week
+              Minggu Ini
             </Button>
             <Button
               size="sm"
@@ -172,14 +172,14 @@ export function DashboardView() {
               onClick={() => setActivityRange("month")}
               disabled={loading}
             >
-              Month
+              Bulan Ini
             </Button>
           </div>
         </CardHeader>
 
         <CardContent>
           {loading ? (
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">Memuat...</p>
           ) : error ? (
             <p className="text-muted-foreground">{error}</p>
           ) : (
@@ -189,7 +189,7 @@ export function DashboardView() {
                   <li key={a.id}>- {a.message}</li>
                 ))
               ) : (
-                <li>- No activity in this range.</li>
+                <li>- Tidak ada aktivitas pada rentang ini.</li>
               )}
             </ul>
           )}

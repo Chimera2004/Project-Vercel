@@ -6,9 +6,8 @@ import { Toaster } from "@/components/ui/toaster"
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'MediCare — Sistem Manajemen Klinik',
+  description: 'Sistem manajemen klinik berbasis web untuk pendaftaran, booking, rekam medis, dan manajemen apotek.',
   icons: {
     icon: '/icon.svg',
   },

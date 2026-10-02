@@ -216,7 +216,7 @@ export default function CheckoutPage() {
                   className="text-muted-foreground hover:text-foreground"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Store
+                  Kembali ke Toko
                 </Button>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
@@ -225,10 +225,10 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h1 className="text-2xl font-semibold text-foreground">
-                      Checkout
+                      Pembayaran (Checkout)
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                      Complete your medical supply order
+                      Lengkapi data pengiriman untuk pesanan Anda
                     </p>
                   </div>
                 </div>
@@ -245,54 +245,52 @@ export default function CheckoutPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Shipping Information
+                  Informasi Pengiriman
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Nama Penerima</Label>
                   <Input id="name" value={shippingInfo.name} onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">Alamat Lengkap</Label>
                   <Input id="address" value={shippingInfo.address} onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">Kota / Kabupaten</Label>
                     <Input id="city" value={shippingInfo.city} onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
+                    <Label htmlFor="state">Provinsi</Label>
                     <Input id="state" value={shippingInfo.state} onChange={(e) => setShippingInfo({ ...shippingInfo, state: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="zip">ZIP Code</Label>
+                    <Label htmlFor="zip">Kode Pos</Label>
                     <Input id="zip" value={shippingInfo.zip} onChange={(e) => setShippingInfo({ ...shippingInfo, zip: e.target.value })} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone">Nomor HP / Telepon</Label>
                     <Input id="phone" value={shippingInfo.phone} onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Alamat Email</Label>
                     <Input id="email" type="email" value={shippingInfo.email} onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })} />
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Payment Information removed, handled in Billing page */}
           </div>
 
           {/* Order Summary */}
           <div className="space-y-6">
             <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle>Ringkasan Pesanan</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {cartItems.length > 0 ? (
@@ -309,11 +307,11 @@ export default function CheckoutPage() {
                             {item.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Qty: {item.quantity}
+                            Jumlah: {item.quantity}
                           </p>
                         </div>
                         <p className="text-sm font-medium">
-                          Rp. {(item.price * item.quantity).toFixed(2)}
+                          Rp {(item.price * item.quantity).toLocaleString("id-ID")}
                         </p>
                       </div>
                     ))}
@@ -322,21 +320,21 @@ export default function CheckoutPage() {
 
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>Subtotal</span>
-                        <span>Rp. {subtotal.toFixed(2)}</span>
+                        <span>Subtotal Produk</span>
+                        <span>Rp {subtotal.toLocaleString("id-ID")}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Shipping</span>
-                        <span>Rp. {shipping.toFixed(2)}</span>
+                        <span>Biaya Pengiriman</span>
+                        <span>Rp {shipping.toLocaleString("id-ID")}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Tax</span>
-                        <span>Rp. {tax.toFixed(2)}</span>
+                        <span>Pajak (PPN)</span>
+                        <span>Rp {tax.toLocaleString("id-ID")}</span>
                       </div>
                       <Separator />
                       <div className="flex justify-between font-semibold text-base">
-                        <span>Total</span>
-                        <span>Rp. {total.toFixed(2)}</span>
+                        <span>Total Pembayaran</span>
+                        <span>Rp {total.toLocaleString("id-ID")}</span>
                       </div>
                     </div>
 
@@ -345,12 +343,12 @@ export default function CheckoutPage() {
                       onClick={handlePlaceOrder}
                       disabled={isProcessing || !Object.values(shippingInfo).every(val => val.trim() !== "")}
                     >
-                      {isProcessing ? "Processing..." : "Place Order"}
+                      {isProcessing ? "Memproses..." : "Buat Pesanan"}
                     </Button>
                   </>
                 ) : (
                   <p className="text-muted-foreground text-center py-4">
-                    No items in cart
+                    Tidak ada produk di keranjang
                   </p>
                 )}
               </CardContent>
@@ -362,8 +360,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield className="h-3 w-3" />
                   <span>
-                    Secure checkout with 256-bit SSL encryption. HIPAA
-                    compliant.
+                    Pembayaran aman dengan enkripsi SSL 256-bit dan kerahasiaan data medis terlindungi.
                   </span>
                 </div>
               </CardContent>

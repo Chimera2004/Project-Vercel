@@ -53,20 +53,20 @@ export function SignUpForm() {
 
     const newErrors: { [key: string]: string } = {};
     if (!formData.name.trim()) {
-      newErrors.name = "Name is required.";
+      newErrors.name = "Nama lengkap wajib diisi.";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address.";
+      newErrors.email = "Harap masukkan alamat email yang valid.";
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match!";
+      newErrors.confirmPassword = "Kata sandi tidak cocok!";
     }
 
     if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long!";
+      newErrors.password = "Kata sandi minimal harus 8 karakter!";
     }
 
     // Date of Birth validation
@@ -77,12 +77,12 @@ export function SignUpForm() {
       minDate.setFullYear(minDate.getFullYear() - 120);
 
       if (dob > today) {
-        newErrors.dateOfBirth = "Date of birth cannot be in the future.";
+        newErrors.dateOfBirth = "Tanggal lahir tidak boleh di masa depan.";
       } else if (dob < minDate) {
-        newErrors.dateOfBirth = "Please enter a valid date of birth.";
+        newErrors.dateOfBirth = "Harap masukkan tanggal lahir yang valid.";
       }
     } else {
-      newErrors.dateOfBirth = "Date of birth is required.";
+      newErrors.dateOfBirth = "Tanggal lahir wajib diisi.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -108,12 +108,12 @@ export function SignUpForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrors({ email: data.message || "Sign up failed" });
+        setErrors({ email: data.message || "Pendaftaran gagal" });
         return;
       }
 
       setErrors({
-        success: "Account created successfully! Redirecting to sign in...",
+        success: "Akun berhasil dibuat! Mengalihkan ke halaman masuk...",
       });
 
       setTimeout(() => {
@@ -121,7 +121,7 @@ export function SignUpForm() {
       }, 1500);
     } catch (error) {
       console.error("Signup error:", error);
-      setErrors({ email: "Something went wrong. Please try again." });
+      setErrors({ email: "Terjadi kesalahan. Silakan coba lagi." });
     }
   };
 
@@ -136,31 +136,31 @@ export function SignUpForm() {
         </div>
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-foreground text-balance">
-            Join MediCare
+            Bergabung dengan MediCare
           </h1>
           <p className="text-muted-foreground text-sm text-pretty">
-            Create your healthcare account
+            Buat akun layanan kesehatan Anda
           </p>
         </div>
       </div>
 
       <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
         <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-xl text-center">Create Account</CardTitle>
+          <CardTitle className="text-xl text-center">Buat Akun Baru</CardTitle>
           <CardDescription className="text-center text-pretty">
-            Fill in your details to get started
+            Isi data diri Anda untuk memulai
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
-                Full Name
+                Nama Lengkap
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Name"
+                placeholder="Nama Lengkap Pasien"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 className="h-11 bg-background/50 border-border/50 focus:bg-background focus:border-primary/50"
@@ -173,7 +173,7 @@ export function SignUpForm() {
 
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
-                Email Address
+                Alamat Email
               </Label>
               <Input
                 id="email"
@@ -191,12 +191,12 @@ export function SignUpForm() {
 
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-sm font-medium">
-                Phone Number
+                Nomor Telepon / HP
               </Label>
               <Input
                 id="phone"
                 type="tel"
-                placeholder="Phone Number"
+                placeholder="Nomor Telepon / HP"
                 value={formData.phoneNumber}
                 onChange={(e) =>
                   handleInputChange("phoneNumber", e.target.value)
@@ -211,7 +211,7 @@ export function SignUpForm() {
 
             <div className="space-y-2">
               <Label htmlFor="dateOfBirth" className="text-sm font-medium">
-                Date of Birth
+                Tanggal Lahir
               </Label>
               <Input
                 id="dateOfBirth"
@@ -232,13 +232,13 @@ export function SignUpForm() {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium">
-                Password
+                Kata Sandi
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
+                  placeholder="Buat kata sandi yang kuat"
                   value={formData.password}
                   onChange={(e) =>
                     handleInputChange("password", e.target.value)
@@ -260,7 +260,7 @@ export function SignUpForm() {
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                   <span className="sr-only">
-                    {showPassword ? "Hide password" : "Show password"}
+                    {showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                   </span>
                 </Button>
               </div>
@@ -271,13 +271,13 @@ export function SignUpForm() {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm Password
+                Konfirmasi Kata Sandi
               </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
+                  placeholder="Masukkan ulang kata sandi Anda"
                   value={formData.confirmPassword}
                   onChange={(e) =>
                     handleInputChange("confirmPassword", e.target.value)
@@ -298,7 +298,7 @@ export function SignUpForm() {
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                   <span className="sr-only">
-                    {showConfirmPassword ? "Hide password" : "Show password"}
+                    {showConfirmPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                   </span>
                 </Button>
               </div>
@@ -311,7 +311,7 @@ export function SignUpForm() {
               type="submit"
               className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
             >
-              Create Account
+              Daftar Akun Baru
             </Button>
 
             {errors.success && (
@@ -322,13 +322,13 @@ export function SignUpForm() {
           </form>
 
           <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            Sudah memiliki akun?{" "}
             <Button
               variant="link"
               className="text-primary hover:text-primary/80 p-0 h-auto font-medium"
               onClick={() => router.push("/")}
             >
-              Sign in
+              Masuk
             </Button>
           </div>
         </CardContent>
@@ -341,7 +341,7 @@ export function SignUpForm() {
           onClick={() => router.push("/")}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Sign In
+          Kembali ke Halaman Masuk
         </Button>
       </div>
     </div>

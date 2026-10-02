@@ -190,11 +190,11 @@ export default function StorePage() {
   };
 
   const categories = [
-    { id: "all", name: "All Products" },
-    { id: "medical-devices", name: "Medical Devices" },
-    { id: "supplements", name: "Supplements" },
-    { id: "prescription", name: "Prescription" },
-    { id: "medical-supplies", name: "Medical Supplies" },
+    { id: "all", name: "Semua Produk" },
+    { id: "medical-devices", name: "Alat Kesehatan" },
+    { id: "supplements", name: "Suplemen & Vitamin" },
+    { id: "prescription", name: "Obat Resep Dokter" },
+    { id: "medical-supplies", name: "Perlengkapan Medis" },
   ];
 
   const filteredProducts = inventory.filter((product) => {
@@ -221,7 +221,7 @@ export default function StorePage() {
                   className="text-muted-foreground hover:text-foreground"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to {isAdmin ? "Admin" : "Dashboard"}
+                  Kembali ke {isAdmin ? "Panel Admin" : "Dashboard"}
                 </Button>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
@@ -230,10 +230,10 @@ export default function StorePage() {
                   </div>
                   <div>
                     <h1 className="text-2xl font-semibold text-foreground">
-                      Medical Store
+                      Toko Obat & Alat Kesehatan
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                      Quality healthcare products and medicines
+                      Produk kesehatan dan obat-obatan berkualitas
                     </p>
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export default function StorePage() {
                   size="sm"
                   onClick={handleManualRefresh}
                   disabled={isLoadingInventory}
-                  title="Refresh inventory"
+                  title="Perbarui data stok"
                   className="gap-2"
                 >
                   <RefreshCw
@@ -260,7 +260,7 @@ export default function StorePage() {
                   onClick={toggleCart}
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
-                  Cart
+                  Keranjang
                   {getTotalItems() > 0 && (
                     <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
                       {getTotalItems()}
@@ -270,9 +270,9 @@ export default function StorePage() {
 
                 <div className="text-right">
                   <p className="text-sm font-medium">
-                    Rp. {getTotalPrice().toFixed(2)}
+                    Rp {getTotalPrice().toLocaleString("id-ID")}
                   </p>
-                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="text-xs text-muted-foreground">Total Belanja</p>
                 </div>
               </div>
             </div>
@@ -284,7 +284,7 @@ export default function StorePage() {
           <div className="fixed top-20 right-4 w-80 bg-card border rounded-lg shadow-xl z-[99999]">
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Shopping Cart</h3>
+                <h3 className="font-semibold">Keranjang Belanja</h3>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -297,7 +297,7 @@ export default function StorePage() {
 
               {getTotalItems() === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-4">
-                  Your cart is empty
+                  Keranjang belanja Anda masih kosong
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -319,7 +319,7 @@ export default function StorePage() {
                             {product.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Rp. {product.price.toFixed(2)} each
+                            Rp {product.price.toLocaleString("id-ID")} / unit
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
@@ -348,14 +348,14 @@ export default function StorePage() {
 
                   <div className="border-t pt-3 mt-3">
                     <div className="flex justify-between items-center font-semibold mb-3">
-                      <span>Total: Rp. {getTotalPrice().toFixed(2)}</span>
+                      <span>Total: Rp {getTotalPrice().toLocaleString("id-ID")}</span>
                     </div>
                     <Button
                       className="w-full"
                       size="sm"
                       onClick={handleCheckout}
                     >
-                      Proceed to Checkout
+                      Lanjut ke Pembayaran
                     </Button>
                   </div>
                 </div>
@@ -371,7 +371,7 @@ export default function StorePage() {
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search products..."
+                  placeholder="Cari produk atau obat..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -411,19 +411,19 @@ export default function StorePage() {
                 {product.quantity <= 0 && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                     <div className="bg-red-600 text-white font-bold text-2xl px-6 py-3 rounded-lg transform rotate-12">
-                      OUT OF STOCK
+                      STOK HABIS
                     </div>
                   </div>
                 )}
                 <div className="absolute top-2 right-2 flex gap-1">
                   {product.quantity <= 0 && (
                     <Badge variant="secondary" className="text-xs">
-                      Out of Stock
+                      Stok Habis
                     </Badge>
                   )}
                   {product.quantity > 0 && product.quantity < 20 && (
                     <Badge variant="outline" className="text-xs bg-yellow-50">
-                      Only {product.quantity} left
+                      Sisa {product.quantity} unit
                     </Badge>
                   )}
                 </div>
@@ -438,7 +438,7 @@ export default function StorePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-2xl font-bold text-primary">
-                      Rp. {product.price}
+                      Rp {product.price.toLocaleString("id-ID")}
                     </p>
                     <Badge variant="outline" className="text-xs mt-1">
                       {categories.find((c) => c.id === product.category)?.name}
@@ -467,8 +467,8 @@ export default function StorePage() {
                       className="h-8 w-8 p-0"
                       title={
                         product.quantity <= 0
-                          ? "This item is out of stock"
-                          : "Add to cart"
+                          ? "Stok barang habis"
+                          : "Tambah ke keranjang"
                       }
                     >
                       <Plus className="h-3 w-3" />
@@ -484,7 +484,7 @@ export default function StorePage() {
           <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
             <CardContent className="pt-6 text-center">
               <p className="text-muted-foreground">
-                No products found matching your search criteria.
+                Tidak ada produk yang sesuai dengan kata kunci pencarian Anda.
               </p>
             </CardContent>
           </Card>
@@ -496,8 +496,7 @@ export default function StorePage() {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Shield className="h-3 w-3" />
               <span>
-                All transactions are HIPAA compliant and your medical
-                information is protected.
+                Seluruh transaksi aman, terenkripsi, dan informasi medis Anda terlindungi.
               </span>
             </div>
           </CardContent>
